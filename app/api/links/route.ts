@@ -13,7 +13,8 @@ const createLinkSchema = z.object({
   redirectUrl: z.string().url().optional().or(z.literal("")),
   successMessage: z.string().optional(),
   expiryMinutes: z.number().int().min(5).max(1440).default(30),
-  expiresAt: z.string().datetime().optional(),
+  status: z.enum(["active", "draft"]).default("active"),
+  linkExpiresIn: z.number().int().min(0).optional(), // minutes, 0 = never
 });
 
 export async function POST(req: NextRequest) {
@@ -29,6 +30,10 @@ export async function POST(req: NextRequest) {
 
     const slug = generateSlug(data.title);
 
+    const expiresAt = data.linkExpiresIn && data.linkExpiresIn > 0
+      ? new Date(Date.now() + data.linkExpiresIn * 60000)
+      : null;
+
     const [link] = await db
       .insert(paymentLinks)
       .values({
@@ -41,7 +46,8 @@ export async function POST(req: NextRequest) {
         redirectUrl: data.redirectUrl || null,
         successMessage: data.successMessage,
         expiryMinutes: data.expiryMinutes,
-        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+        status: data.status,
+        expiresAt,
       })
       .returning();
 

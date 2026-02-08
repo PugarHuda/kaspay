@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/lib/auth/context";
 import {
   Card,
@@ -21,6 +21,9 @@ import {
   Code2,
   Download,
   Search,
+  Clock,
+  FileEdit,
+  Send,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { formatKAS, formatDate } from "@/lib/utils";
@@ -38,6 +41,40 @@ interface PaymentLink {
   expiresAt: string | null;
 }
 
+function getEffectiveStatus(link: PaymentLink): "active" | "draft" | "expired" | "inactive" {
+  if (link.status === "draft") return "draft";
+  if (link.status === "inactive") return "inactive";
+  if (link.expiresAt && new Date(link.expiresAt) < new Date()) return "expired";
+  return "active";
+}
+
+function getTimeLeft(expiresAt: string): string {
+  const now = new Date().getTime();
+  const expires = new Date(expiresAt).getTime();
+  const diff = expires - now;
+
+  if (diff <= 0) return "Expired";
+
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
+const STATUS_BADGE_MAP = {
+  active: { variant: "success" as const, label: "Active" },
+  draft: { variant: "secondary" as const, label: "Draft" },
+  expired: { variant: "destructive" as const, label: "Expired" },
+  inactive: { variant: "secondary" as const, label: "Inactive" },
+};
+
+const STATUS_FILTERS = ["all", "active", "draft", "expired"] as const;
+
 export default function LinksPage() {
   const { token } = useAuth();
   const [links, setLinks] = useState<PaymentLink[]>([]);
@@ -46,6 +83,7 @@ export default function LinksPage() {
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [embedSlug, setEmbedSlug] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState<string | null>(null);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -55,13 +93,26 @@ export default function LinksPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [redirectUrl, setRedirectUrl] = useState("");
   const [expiryMinutes, setExpiryMinutes] = useState(30);
+  const [linkExpiresIn, setLinkExpiresIn] = useState(0); // 0 = never
   const [qrSlug, setQrSlug] = useState<string | null>(null);
   const [searchLinks, setSearchLinks] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  // Live countdown tick
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const hasExpiring = links.some(
+      (l) => l.expiresAt && getEffectiveStatus(l) === "active"
+    );
+    if (!hasExpiring) return;
+    const timer = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, [links]);
+
   const filteredLinks = useMemo(() => {
     return links.filter((l) => {
-      if (statusFilter !== "all" && l.status !== statusFilter) return false;
+      const effective = getEffectiveStatus(l);
+      if (statusFilter !== "all" && effective !== statusFilter) return false;
       if (searchLinks) {
         const q = searchLinks.toLowerCase();
         return (
@@ -93,7 +144,7 @@ export default function LinksPage() {
     }
   }
 
-  async function createLink(e: React.FormEvent) {
+  async function createLink(e: React.FormEvent, asDraft: boolean = false) {
     e.preventDefault();
     if (!token) return;
     setCreating(true);
@@ -113,24 +164,53 @@ export default function LinksPage() {
           successMessage: successMessage || undefined,
           redirectUrl: redirectUrl || undefined,
           expiryMinutes,
+          status: asDraft ? "draft" : "active",
+          linkExpiresIn: linkExpiresIn > 0 ? linkExpiresIn : undefined,
         }),
       });
 
       if (!res.ok) throw new Error("Failed to create link");
 
       setShowCreate(false);
-      setTitle("");
-      setDescription("");
-      setAmount("");
-      setCurrency("KAS");
-      setSuccessMessage("");
-      setRedirectUrl("");
-      setExpiryMinutes(30);
+      resetForm();
       fetchLinks();
     } catch (err) {
       console.error("Failed to create link:", err);
     } finally {
       setCreating(false);
+    }
+  }
+
+  function resetForm() {
+    setTitle("");
+    setDescription("");
+    setAmount("");
+    setCurrency("KAS");
+    setSuccessMessage("");
+    setRedirectUrl("");
+    setExpiryMinutes(30);
+    setLinkExpiresIn(0);
+  }
+
+  async function publishLink(linkId: string) {
+    if (!token) return;
+    setPublishing(linkId);
+    try {
+      const res = await fetch(`/api/links/${linkId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: "active" }),
+      });
+      if (res.ok) {
+        fetchLinks();
+      }
+    } catch (err) {
+      console.error("Failed to publish link:", err);
+    } finally {
+      setPublishing(null);
     }
   }
 
@@ -167,7 +247,7 @@ export default function LinksPage() {
       {/* Create Modal */}
       {showCreate && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-md w-full p-6">
+          <div className="bg-card rounded-xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">Create Payment Link</h2>
               <button
@@ -178,7 +258,7 @@ export default function LinksPage() {
               </button>
             </div>
 
-            <form onSubmit={createLink} className="space-y-4">
+            <form onSubmit={(e) => createLink(e, false)} className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Title</label>
                 <Input
@@ -277,7 +357,7 @@ export default function LinksPage() {
 
               <div>
                 <label className="text-sm font-medium mb-2 block">
-                  Payment Expiration
+                  Payment Timeout
                 </label>
                 <div className="grid grid-cols-5 gap-1.5">
                   {[
@@ -302,7 +382,38 @@ export default function LinksPage() {
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  How long customers have to complete payment
+                  How long customers have to complete each payment
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Link Expiration
+                </label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {[
+                    { value: 0, label: "Never" },
+                    { value: 1440, label: "1 day" },
+                    { value: 10080, label: "7 days" },
+                    { value: 43200, label: "30 days" },
+                    { value: 131400, label: "3 mo" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setLinkExpiresIn(opt.value)}
+                      className={`py-1.5 px-2 rounded-lg border text-xs font-medium transition-colors ${
+                        linkExpiresIn === opt.value
+                          ? "bg-primary text-white border-primary"
+                          : "bg-card text-foreground border-input hover:bg-muted"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  When this link stops accepting payments
                 </p>
               </div>
 
@@ -310,16 +421,24 @@ export default function LinksPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setShowCreate(false)}
+                  onClick={(e) => createLink(e as any, true)}
                   className="flex-1"
+                  disabled={creating || !title || !amount}
                 >
-                  Cancel
-                </Button>
-                <Button type="submit" className="flex-1" disabled={creating}>
                   {creating ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  ) : null}
-                  Create
+                  ) : (
+                    <FileEdit className="w-4 h-4 mr-2" />
+                  )}
+                  Save Draft
+                </Button>
+                <Button type="submit" className="flex-1" disabled={creating || !title || !amount}>
+                  {creating ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Send className="w-4 h-4 mr-2" />
+                  )}
+                  Publish
                 </Button>
               </div>
             </form>
@@ -340,7 +459,7 @@ export default function LinksPage() {
             />
           </div>
           <div className="flex gap-1.5">
-            {["all", "active", "inactive"].map((s) => (
+            {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
@@ -378,79 +497,120 @@ export default function LinksPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredLinks.map((link) => (
-            <Card key={link.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-base">{link.title}</CardTitle>
-                  <Badge
-                    variant={
-                      link.status === "active" ? "success" : "secondary"
-                    }
-                  >
-                    {link.status}
-                  </Badge>
-                </div>
-                {link.description && (
-                  <p className="text-sm text-muted-foreground">
-                    {link.description}
-                  </p>
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold mb-4">
-                  {link.currency === "USD"
-                    ? `$${parseFloat(link.amount).toFixed(2)} USD`
-                    : `${formatKAS(link.amount)} KAS`}
-                </div>
+          {filteredLinks.map((link) => {
+            const effective = getEffectiveStatus(link);
+            const badgeInfo = STATUS_BADGE_MAP[effective];
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => copyLink(link.slug)}
-                  >
-                    {copied === link.slug ? (
-                      <CheckCircle2 className="w-4 h-4 mr-1 text-green-600" />
-                    ) : (
-                      <Copy className="w-4 h-4 mr-1" />
-                    )}
-                    {copied === link.slug ? "Copied!" : "Copy Link"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEmbedSlug(link.slug)}
-                    title="Embed code"
-                  >
-                    <Code2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQrSlug(link.slug)}
-                    title="QR Code"
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      window.open(`/pay/${link.slug}`, "_blank")
-                    }
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
-                </div>
+            return (
+              <Card key={link.id} className={`hover:shadow-md transition-shadow ${effective === "draft" ? "border-dashed" : ""}`}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-base">{link.title}</CardTitle>
+                    <Badge variant={badgeInfo.variant}>
+                      {badgeInfo.label}
+                    </Badge>
+                  </div>
+                  {link.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {link.description}
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold mb-3">
+                    {link.currency === "USD"
+                      ? `$${parseFloat(link.amount).toFixed(2)} USD`
+                      : `${formatKAS(link.amount)} KAS`}
+                  </div>
 
-                <p className="text-xs text-muted-foreground mt-3">
-                  Created {formatDate(link.createdAt)} &middot; Expires in {link.expiryMinutes >= 60 ? `${link.expiryMinutes / 60}h` : `${link.expiryMinutes}m`}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+                  {/* Link expiration countdown */}
+                  {link.expiresAt && (
+                    <div className={`flex items-center gap-1.5 text-xs mb-3 px-2 py-1.5 rounded-md ${
+                      effective === "expired"
+                        ? "bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400"
+                        : "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
+                    }`}>
+                      <Clock className="w-3.5 h-3.5" />
+                      {effective === "expired"
+                        ? "Link expired"
+                        : `Link expires in ${getTimeLeft(link.expiresAt)}`}
+                    </div>
+                  )}
+
+                  {/* Draft publish button */}
+                  {effective === "draft" && (
+                    <Button
+                      size="sm"
+                      className="w-full mb-3"
+                      onClick={() => publishLink(link.id)}
+                      disabled={publishing === link.id}
+                    >
+                      {publishing === link.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Send className="w-4 h-4 mr-2" />
+                      )}
+                      Publish Link
+                    </Button>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => copyLink(link.slug)}
+                      disabled={effective === "draft"}
+                    >
+                      {copied === link.slug ? (
+                        <CheckCircle2 className="w-4 h-4 mr-1 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4 mr-1" />
+                      )}
+                      {copied === link.slug ? "Copied!" : "Copy Link"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEmbedSlug(link.slug)}
+                      title="Embed code"
+                      disabled={effective === "draft"}
+                    >
+                      <Code2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setQrSlug(link.slug)}
+                      title="QR Code"
+                      disabled={effective === "draft"}
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        window.open(`/pay/${link.slug}`, "_blank")
+                      }
+                      disabled={effective === "draft"}
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3">
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(link.createdAt)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Timeout: {link.expiryMinutes >= 60 ? `${link.expiryMinutes / 60}h` : `${link.expiryMinutes}m`}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
