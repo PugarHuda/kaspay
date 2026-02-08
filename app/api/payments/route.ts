@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
         customerEmail,
         customerName,
         metadata,
-        expiresAt: new Date(Date.now() + (merchant.paymentExpiry || 30) * 60000),
+        expiresAt: new Date(Date.now() + (link.expiryMinutes || merchant.paymentExpiry || 30) * 60000),
       })
       .returning();
 

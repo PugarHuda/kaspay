@@ -321,16 +321,36 @@ export default function PaymentPage() {
               </motion.div>
             ) : (
               <motion.div key="pending" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                {/* QR Code */}
-                <div className="flex justify-center mb-6">
+                {/* QR Code - address only for max wallet compatibility */}
+                <div className="flex justify-center mb-4">
                   <div className="p-4 bg-white rounded-xl border-2 border-primary/20 shadow-sm">
                     <QRCodeSVG
-                      value={`${payment.kaspaAddress}?amount=${cleanAmount(payment.amountExpected)}`}
-                      size={220}
+                      value={payment.kaspaAddress}
+                      size={200}
                       level="M"
                       fgColor="#1a1a2e"
                       includeMargin={false}
                     />
+                  </div>
+                </div>
+
+                <p className="text-xs text-center text-muted-foreground mb-4">
+                  Scan with Kaspium or any Kaspa wallet
+                </p>
+
+                {/* Amount to send */}
+                <div className="mb-4">
+                  <label className="text-sm font-medium mb-2 block text-muted-foreground">
+                    Exact amount to send
+                  </label>
+                  <div
+                    className="flex items-center justify-between px-3 py-2.5 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={copyAmount}
+                  >
+                    <span className="font-mono font-bold text-lg">
+                      {cleanAmount(payment.amountExpected)} KAS
+                    </span>
+                    <Copy className="w-4 h-4 text-muted-foreground" />
                   </div>
                 </div>
 
@@ -358,21 +378,16 @@ export default function PaymentPage() {
                   </div>
                 </div>
 
-                {/* Amount to send */}
-                <div className="mb-6">
-                  <label className="text-sm font-medium mb-2 block text-muted-foreground">
-                    Exact amount to send
-                  </label>
-                  <div
-                    className="flex items-center justify-between px-3 py-2.5 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={copyAmount}
-                  >
-                    <span className="font-mono font-bold">
-                      {cleanAmount(payment.amountExpected)} KAS
-                    </span>
-                    <Copy className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </div>
+                {/* Open in Wallet deep link */}
+                <a
+                  href={`${payment.kaspaAddress}?amount=${cleanAmount(payment.amountExpected)}`}
+                  className="block mb-4"
+                >
+                  <Button variant="outline" className="w-full">
+                    <Zap className="w-4 h-4 mr-2" />
+                    Open in Kaspa Wallet
+                  </Button>
+                </a>
 
                 {/* Timer & Status */}
                 <div className="flex items-center justify-between">

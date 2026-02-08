@@ -30,6 +30,7 @@ interface PaymentLink {
   description: string | null;
   amount: string;
   currency: string;
+  expiryMinutes: number;
   slug: string;
   status: string;
   createdAt: string;
@@ -52,6 +53,7 @@ export default function LinksPage() {
   const [currency, setCurrency] = useState<"KAS" | "USD">("KAS");
   const [successMessage, setSuccessMessage] = useState("");
   const [redirectUrl, setRedirectUrl] = useState("");
+  const [expiryMinutes, setExpiryMinutes] = useState(30);
   const [qrSlug, setQrSlug] = useState<string | null>(null);
 
   useEffect(() => {
@@ -92,6 +94,7 @@ export default function LinksPage() {
           currency,
           successMessage: successMessage || undefined,
           redirectUrl: redirectUrl || undefined,
+          expiryMinutes,
         }),
       });
 
@@ -104,6 +107,7 @@ export default function LinksPage() {
       setCurrency("KAS");
       setSuccessMessage("");
       setRedirectUrl("");
+      setExpiryMinutes(30);
       fetchLinks();
     } catch (err) {
       console.error("Failed to create link:", err);
@@ -253,6 +257,37 @@ export default function LinksPage() {
                 </p>
               </div>
 
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Payment Expiration
+                </label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {[
+                    { value: 15, label: "15m" },
+                    { value: 30, label: "30m" },
+                    { value: 60, label: "1h" },
+                    { value: 120, label: "2h" },
+                    { value: 1440, label: "24h" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setExpiryMinutes(opt.value)}
+                      className={`py-1.5 px-2 rounded-lg border text-xs font-medium transition-colors ${
+                        expiryMinutes === opt.value
+                          ? "bg-primary text-white border-primary"
+                          : "bg-card text-foreground border-input hover:bg-muted"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  How long customers have to complete payment
+                </p>
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <Button
                   type="button"
@@ -357,7 +392,7 @@ export default function LinksPage() {
                 </div>
 
                 <p className="text-xs text-muted-foreground mt-3">
-                  Created {formatDate(link.createdAt)}
+                  Created {formatDate(link.createdAt)} &middot; Expires in {link.expiryMinutes >= 60 ? `${link.expiryMinutes / 60}h` : `${link.expiryMinutes}m`}
                 </p>
               </CardContent>
             </Card>

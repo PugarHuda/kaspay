@@ -34,6 +34,7 @@ export const paymentLinks = pgTable("payment_links", {
   currency: varchar("currency", { length: 10 }).notNull().default("KAS"),
   redirectUrl: text("redirect_url"),
   successMessage: text("success_message"),
+  expiryMinutes: integer("expiry_minutes").notNull().default(30),
   status: varchar("status", { length: 20 }).notNull().default("active"),
   slug: varchar("slug", { length: 100 }).notNull().unique(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

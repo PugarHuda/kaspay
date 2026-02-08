@@ -12,6 +12,7 @@ const createLinkSchema = z.object({
   currency: z.enum(["KAS", "USD"]).default("KAS"),
   redirectUrl: z.string().url().optional().or(z.literal("")),
   successMessage: z.string().optional(),
+  expiryMinutes: z.number().int().min(5).max(1440).default(30),
   expiresAt: z.string().datetime().optional(),
 });
 
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
         slug,
         redirectUrl: data.redirectUrl || null,
         successMessage: data.successMessage,
+        expiryMinutes: data.expiryMinutes,
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
       })
       .returning();
