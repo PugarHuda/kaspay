@@ -45,7 +45,6 @@ export default function PaymentPage() {
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const createdRef = useRef(false);
 
-  // Create payment on mount (with guard against double-mount in StrictMode)
   useEffect(() => {
     if (createdRef.current) return;
     createdRef.current = true;
@@ -57,7 +56,6 @@ export default function PaymentPage() {
     };
   }, [params.slug]);
 
-  // Poll for status when payment is pending
   useEffect(() => {
     if (payment && payment.status === "pending") {
       pollRef.current = setInterval(checkStatus, 2000);
@@ -67,7 +65,6 @@ export default function PaymentPage() {
     }
   }, [payment?.id, payment?.status]);
 
-  // Countdown timer
   useEffect(() => {
     if (!payment?.expiresAt || payment.status !== "pending") return;
 
@@ -142,13 +139,12 @@ export default function PaymentPage() {
         );
         if (pollRef.current) clearInterval(pollRef.current);
 
-        // Dynamic import for confetti
         const confetti = (await import("canvas-confetti")).default;
         confetti({
           particleCount: 150,
           spread: 80,
           origin: { y: 0.6 },
-          colors: ["#49EACB", "#3DD9AD", "#2BC48F"],
+          colors: ["#49EACB", "#FFD700", "#FF6B9D"],
         });
       } else if (data.status === "expired") {
         setPayment((prev) => (prev ? { ...prev, status: "expired" } : null));
@@ -173,7 +169,7 @@ export default function PaymentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -181,11 +177,13 @@ export default function PaymentPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10 p-4">
-        <div className="bg-card rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
-          <AlertCircle className="w-16 h-16 text-destructive mx-auto mb-4" />
-          <h1 className="text-xl font-bold mb-2">Payment Error</h1>
-          <p className="text-muted-foreground">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="bg-card rounded-md border-2 border-foreground shadow-brutal-lg max-w-md w-full p-8 text-center">
+          <div className="w-16 h-16 bg-destructive border-2 border-foreground rounded-md flex items-center justify-center mx-auto mb-4 shadow-brutal-sm">
+            <AlertCircle className="w-8 h-8 text-destructive-foreground" />
+          </div>
+          <h1 className="text-xl font-black mb-2">Payment Error</h1>
+          <p className="text-muted-foreground font-medium">{error}</p>
         </div>
       </div>
     );
@@ -197,45 +195,45 @@ export default function PaymentPage() {
     kasPrice > 0 ? parseFloat(payment.amountExpected) * kasPrice : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/10 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="bg-card rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+        className="bg-card rounded-md border-2 border-foreground shadow-brutal-lg max-w-md w-full overflow-hidden"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-primary to-primary/80 p-6 text-white">
+        <div className="bg-primary border-b-2 border-foreground p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5" />
+            <div className="w-8 h-8 bg-card border-2 border-foreground rounded-md flex items-center justify-center shadow-brutal-sm">
+              <Zap className="w-5 h-5 text-primary" />
             </div>
-            <span className="font-bold">KasPay</span>
+            <span className="font-black text-primary-foreground">KasPay</span>
           </div>
-          <h1 className="text-lg font-medium opacity-90">
+          <h1 className="text-lg font-black text-primary-foreground">
             {payment.title}
           </h1>
           {payment.description && (
-            <p className="text-sm opacity-70 mt-1">{payment.description}</p>
+            <p className="text-sm text-primary-foreground/70 font-medium mt-1">{payment.description}</p>
           )}
           <div className="mt-4">
             {payment.originalUsdAmount ? (
               <>
-                <div className="text-3xl font-bold">
+                <div className="text-3xl font-black text-primary-foreground">
                   ${parseFloat(payment.originalUsdAmount).toFixed(2)} USD
                 </div>
-                <div className="text-sm opacity-70 mt-1">
+                <div className="text-sm text-primary-foreground/70 font-bold mt-1">
                   = {formatKAS(payment.amountExpected)} KAS (live rate)
                 </div>
               </>
             ) : (
               <>
-                <div className="text-3xl font-bold">
+                <div className="text-3xl font-black text-primary-foreground">
                   {formatKAS(payment.amountExpected)} KAS
                 </div>
                 {usdAmount > 0 && (
-                  <div className="text-sm opacity-70 mt-1">
-                    ≈ ${usdAmount.toFixed(2)} USD
+                  <div className="text-sm text-primary-foreground/70 font-bold mt-1">
+                    ~ ${usdAmount.toFixed(2)} USD
                   </div>
                 )}
               </>
@@ -261,19 +259,21 @@ export default function PaymentPage() {
                     damping: 15,
                   }}
                 >
-                  <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-4" />
+                  <div className="w-20 h-20 bg-emerald-300 border-2 border-foreground rounded-md flex items-center justify-center mx-auto mb-4 shadow-brutal">
+                    <CheckCircle2 className="w-10 h-10" />
+                  </div>
                 </motion.div>
-                <h2 className="text-2xl font-bold text-green-600 mb-2">
+                <h2 className="text-2xl font-black text-emerald-600 mb-2">
                   Payment Confirmed!
                 </h2>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground font-medium mb-4">
                   {payment.successMessage || "Your transaction has been confirmed on the Kaspa blockchain."}
                 </p>
 
                 {payment.txId && (
-                  <div className="bg-muted/50 rounded-lg p-3 mb-4 text-left">
-                    <p className="text-xs text-muted-foreground mb-1">Transaction ID</p>
-                    <p className="text-xs font-mono break-all">{payment.txId}</p>
+                  <div className="bg-muted border-2 border-foreground rounded-md p-3 mb-4 text-left shadow-brutal-sm">
+                    <p className="text-xs text-muted-foreground font-bold mb-1">Transaction ID</p>
+                    <p className="text-xs font-mono break-all font-medium">{payment.txId}</p>
                   </div>
                 )}
 
@@ -313,9 +313,11 @@ export default function PaymentPage() {
                 animate={{ opacity: 1 }}
                 className="text-center py-8"
               >
-                <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-xl font-bold mb-2">Payment Expired</h2>
-                <p className="text-muted-foreground">
+                <div className="w-16 h-16 bg-muted border-2 border-foreground rounded-md flex items-center justify-center mx-auto mb-4 shadow-brutal-sm">
+                  <Clock className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h2 className="text-xl font-black mb-2">Payment Expired</h2>
+                <p className="text-muted-foreground font-medium">
                   This payment has expired. Please request a new payment link.
                 </p>
               </motion.div>
@@ -323,15 +325,15 @@ export default function PaymentPage() {
               <motion.div key="pending" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 {/* Testnet notice */}
                 {payment.kaspaAddress.startsWith("kaspatest:") && (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg mb-4 text-xs">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-secondary border-2 border-foreground rounded-md mb-4 text-xs font-bold shadow-brutal-sm">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>Testnet — make sure your wallet is set to <strong>Testnet-10</strong> network</span>
+                    <span>Testnet - make sure your wallet is set to <strong>Testnet-10</strong></span>
                   </div>
                 )}
 
-                {/* QR Code with Kaspa URI (address + amount) */}
+                {/* QR Code */}
                 <div className="flex justify-center mb-4">
-                  <div className="p-4 bg-white rounded-xl border-2 border-primary/20 shadow-sm">
+                  <div className="p-4 bg-white border-2 border-foreground rounded-md shadow-brutal">
                     <QRCodeSVG
                       value={`${payment.kaspaAddress}?amount=${cleanAmount(payment.amountExpected)}`}
                       size={200}
@@ -342,20 +344,20 @@ export default function PaymentPage() {
                   </div>
                 </div>
 
-                <p className="text-xs text-center text-muted-foreground mb-4">
+                <p className="text-xs text-center text-muted-foreground mb-4 font-bold">
                   Scan with Kaspium or any Kaspa wallet
                 </p>
 
                 {/* Amount to send */}
                 <div className="mb-4">
-                  <label className="text-sm font-medium mb-2 block text-muted-foreground">
+                  <label className="text-sm font-bold mb-2 block text-muted-foreground">
                     Exact amount to send
                   </label>
                   <div
-                    className="flex items-center justify-between px-3 py-2.5 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between px-3 py-2.5 border-2 border-foreground rounded-md bg-muted cursor-pointer hover:shadow-brutal-sm transition-all shadow-brutal-sm"
                     onClick={copyAmount}
                   >
-                    <span className="font-mono font-bold text-lg">
+                    <span className="font-mono font-black text-lg">
                       {cleanAmount(payment.amountExpected)} KAS
                     </span>
                     <Copy className="w-4 h-4 text-muted-foreground" />
@@ -364,11 +366,11 @@ export default function PaymentPage() {
 
                 {/* Address */}
                 <div className="mb-4">
-                  <label className="text-sm font-medium mb-2 block text-muted-foreground">
+                  <label className="text-sm font-bold mb-2 block text-muted-foreground">
                     Send to this address
                   </label>
                   <div className="flex gap-2">
-                    <div className="flex-1 px-3 py-2.5 border rounded-lg text-xs font-mono bg-muted/30 break-all leading-relaxed">
+                    <div className="flex-1 px-3 py-2.5 border-2 border-foreground rounded-md text-xs font-mono bg-muted break-all leading-relaxed font-medium shadow-brutal-sm">
                       {payment.kaspaAddress}
                     </div>
                     <Button
@@ -378,7 +380,7 @@ export default function PaymentPage() {
                       className="shrink-0"
                     >
                       {copied ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       ) : (
                         <Copy className="w-4 h-4" />
                       )}
@@ -386,12 +388,12 @@ export default function PaymentPage() {
                   </div>
                 </div>
 
-                {/* Open in Wallet deep link */}
+                {/* Open in Wallet */}
                 <a
                   href={`${payment.kaspaAddress}?amount=${cleanAmount(payment.amountExpected)}`}
                   className="block mb-4"
                 >
-                  <Button variant="outline" className="w-full">
+                  <Button variant="secondary" className="w-full">
                     <Zap className="w-4 h-4 mr-2" />
                     Open in Kaspa Wallet
                   </Button>
@@ -399,14 +401,14 @@ export default function PaymentPage() {
 
                 {/* Timer & Status */}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 rounded-lg">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-secondary border-2 border-foreground rounded-md shadow-brutal-sm">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-bold">
                       Waiting for payment...
                     </span>
                   </div>
                   {timeLeft && (
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground font-bold">
                       <Clock className="w-4 h-4" />
                       {timeLeft}
                     </div>
@@ -418,11 +420,11 @@ export default function PaymentPage() {
         </div>
 
         {/* Footer */}
-        <div className="border-t px-6 py-4">
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+        <div className="border-t-2 border-foreground px-6 py-4">
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground font-bold">
             <Zap className="w-3 h-3" />
             Powered by{" "}
-            <span className="font-semibold text-primary">KasPay</span>
+            <span className="font-black text-primary">KasPay</span>
           </div>
         </div>
       </motion.div>

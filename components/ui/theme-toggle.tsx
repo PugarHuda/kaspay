@@ -28,7 +28,7 @@ export function ThemeToggle() {
   }
 
   return (
-    <Button variant="ghost" size="icon" onClick={toggle} title="Toggle theme">
+    <Button variant="outline" size="icon" onClick={toggle} title="Toggle theme">
       {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
     </Button>
   );

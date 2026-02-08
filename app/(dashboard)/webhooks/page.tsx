@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Loader2, Webhook, Trash2 } from "lucide-react";
+import { Plus, X, Loader2, Webhook } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 interface WebhookData {
@@ -112,8 +112,8 @@ export default function WebhooksPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Webhooks</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl font-black">Webhooks</h1>
+          <p className="text-muted-foreground mt-1 font-medium">
             Get notified when payments are confirmed
           </p>
         </div>
@@ -126,9 +126,9 @@ export default function WebhooksPage() {
       {/* Create Modal */}
       {showCreate && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-md w-full p-6">
+          <div className="bg-card rounded-md border-2 border-foreground shadow-brutal-lg max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Add Webhook</h2>
+              <h2 className="text-xl font-black">Add Webhook</h2>
               <button
                 onClick={() => setShowCreate(false)}
                 className="text-muted-foreground hover:text-foreground"
@@ -139,7 +139,7 @@ export default function WebhooksPage() {
 
             <form onSubmit={createWebhook} className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-sm font-bold mb-2 block">
                   Endpoint URL
                 </label>
                 <Input
@@ -152,17 +152,17 @@ export default function WebhooksPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Events</label>
+                <label className="text-sm font-bold mb-2 block">Events</label>
                 <div className="flex flex-wrap gap-2">
                   {AVAILABLE_EVENTS.map((event) => (
                     <button
                       key={event.value}
                       type="button"
                       onClick={() => toggleEvent(event.value)}
-                      className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                      className={`px-3 py-1.5 rounded-md text-sm border-2 font-bold transition-all ${
                         selectedEvents.includes(event.value)
-                          ? "bg-primary text-white border-primary"
-                          : "bg-card text-foreground border-input hover:bg-muted"
+                          ? "bg-primary text-primary-foreground border-foreground shadow-brutal-sm"
+                          : "bg-card text-foreground border-foreground/30 hover:border-foreground"
                       }`}
                     >
                       {event.label}
@@ -200,8 +200,10 @@ export default function WebhooksPage() {
       {webhooks.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Webhook className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">
+            <div className="w-16 h-16 bg-muted border-2 border-foreground rounded-md flex items-center justify-center mx-auto mb-4 shadow-brutal-sm">
+              <Webhook className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground mb-4 font-medium">
               No webhooks configured. Add one to get notified about payments.
             </p>
             <Button onClick={() => setShowCreate(true)}>
@@ -238,7 +240,7 @@ export default function WebhooksPage() {
                       </Badge>
                     ))}
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground font-bold">
                     Created {formatDate(wh.createdAt)}
                   </span>
                 </div>
@@ -257,7 +259,7 @@ export default function WebhooksPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <pre className="bg-muted p-4 rounded-lg text-xs font-mono overflow-x-auto">
+          <pre className="bg-muted p-4 rounded-md text-xs font-mono overflow-x-auto border-2 border-foreground shadow-brutal-sm">
 {`{
   "event": "payment.confirmed",
   "payment": {

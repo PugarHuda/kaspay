@@ -105,8 +105,8 @@ export default function PaymentsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Payments</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl font-black">Payments</h1>
+          <p className="text-muted-foreground mt-1 font-medium">
             View all your payment transactions
           </p>
         </div>
@@ -135,10 +135,10 @@ export default function PaymentsPage() {
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-3 py-2 rounded-lg border text-xs font-medium capitalize transition-colors ${
+                className={`px-3 py-2 rounded-md border-2 text-xs font-bold capitalize transition-all ${
                   statusFilter === s
-                    ? "bg-primary text-white border-primary"
-                    : "bg-card text-foreground border-input hover:bg-muted"
+                    ? "bg-primary text-primary-foreground border-foreground shadow-brutal-sm"
+                    : "bg-card text-foreground border-foreground/30 hover:border-foreground hover:shadow-brutal-sm"
                 }`}
               >
                 {s}
@@ -151,35 +151,35 @@ export default function PaymentsPage() {
       <Card>
         <CardContent className="p-0">
           {payments.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-muted-foreground font-medium">
               No payments yet. Share your payment links to start receiving
               payments.
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-muted-foreground font-medium">
               No payments match your search.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b text-left bg-muted/30">
-                    <th className="p-4 text-sm font-medium text-muted-foreground">
+                  <tr className="border-b-2 border-foreground text-left bg-muted/50">
+                    <th className="p-4 text-sm font-black text-muted-foreground">
                       Payment
                     </th>
-                    <th className="p-4 text-sm font-medium text-muted-foreground">
+                    <th className="p-4 text-sm font-black text-muted-foreground">
                       Amount
                     </th>
-                    <th className="p-4 text-sm font-medium text-muted-foreground">
+                    <th className="p-4 text-sm font-black text-muted-foreground">
                       Status
                     </th>
-                    <th className="p-4 text-sm font-medium text-muted-foreground">
+                    <th className="p-4 text-sm font-black text-muted-foreground">
                       Customer
                     </th>
-                    <th className="p-4 text-sm font-medium text-muted-foreground">
+                    <th className="p-4 text-sm font-black text-muted-foreground">
                       TX ID
                     </th>
-                    <th className="p-4 text-sm font-medium text-muted-foreground">
+                    <th className="p-4 text-sm font-black text-muted-foreground">
                       Date
                     </th>
                   </tr>
@@ -188,22 +188,22 @@ export default function PaymentsPage() {
                   {filtered.map((payment) => (
                     <tr
                       key={payment.id}
-                      className="border-b last:border-0 hover:bg-muted/20"
+                      className="border-b border-foreground/20 last:border-0 hover:bg-muted/30"
                     >
                       <td className="p-4">
-                        <div className="font-medium">
+                        <div className="font-bold">
                           {payment.paymentLink?.title || "Direct Payment"}
                         </div>
-                        <div className="text-xs text-muted-foreground font-mono">
+                        <div className="text-xs text-muted-foreground font-mono font-medium">
                           {payment.id.slice(0, 8)}...
                         </div>
                       </td>
                       <td className="p-4">
-                        <div className="font-mono font-medium">
+                        <div className="font-mono font-bold">
                           {formatKAS(payment.amountExpected)} KAS
                         </div>
                         {payment.amountReceived && (
-                          <div className="text-xs text-green-600 font-mono">
+                          <div className="text-xs text-emerald-600 font-mono font-bold">
                             Received: {formatKAS(payment.amountReceived)}
                           </div>
                         )}
@@ -221,7 +221,7 @@ export default function PaymentsPage() {
                           {payment.status}
                         </Badge>
                       </td>
-                      <td className="p-4 text-sm">
+                      <td className="p-4 text-sm font-medium">
                         {payment.customerEmail || (
                           <span className="text-muted-foreground">
                             Anonymous
@@ -230,14 +230,14 @@ export default function PaymentsPage() {
                       </td>
                       <td className="p-4">
                         {payment.txId ? (
-                          <span className="text-xs font-mono text-muted-foreground">
+                          <span className="text-xs font-mono text-muted-foreground font-medium">
                             {truncateAddress(payment.txId, 6)}
                           </span>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
                       </td>
-                      <td className="p-4 text-sm text-muted-foreground">
+                      <td className="p-4 text-sm text-muted-foreground font-medium">
                         {formatDate(payment.createdAt)}
                       </td>
                     </tr>

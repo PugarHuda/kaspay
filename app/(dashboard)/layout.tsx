@@ -51,15 +51,15 @@ export default function DashboardLayout({
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-card border-r z-40 hidden lg:block">
+      <aside className="fixed left-0 top-0 h-full w-64 bg-card border-r-2 border-foreground z-40 hidden lg:block">
         <div className="p-6">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-primary border-2 border-foreground rounded-md flex items-center justify-center shadow-brutal-sm">
+              <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold">KasPay</span>
+            <span className="text-xl font-black tracking-tight">KasPay</span>
           </Link>
         </div>
 
@@ -69,10 +69,10 @@ export default function DashboardLayout({
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-bold transition-all",
                 pathname === item.href
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-primary text-primary-foreground border-2 border-foreground shadow-brutal-sm"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground border-2 border-transparent"
               )}
             >
               <item.icon className="w-5 h-5" />
@@ -81,10 +81,10 @@ export default function DashboardLayout({
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t">
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t-2 border-foreground">
           <div className="flex items-center justify-between px-3 py-2 mb-2">
             <div className="min-w-0">
-              <p className="text-sm font-medium truncate">{user.name || user.email}</p>
+              <p className="text-sm font-bold truncate">{user.name || user.email}</p>
               <p className="text-xs text-muted-foreground truncate">
                 {user.email}
               </p>
@@ -96,7 +96,7 @@ export default function DashboardLayout({
               logout();
               router.push("/login");
             }}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors w-full"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-bold text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-all w-full border-2 border-transparent hover:border-foreground"
           >
             <LogOut className="w-5 h-5" />
             Sign Out
@@ -105,26 +105,26 @@ export default function DashboardLayout({
       </aside>
 
       {/* Mobile Header */}
-      <header className="lg:hidden sticky top-0 z-40 bg-card border-b px-4 h-14 flex items-center justify-between">
+      <header className="lg:hidden sticky top-0 z-40 bg-card border-b-2 border-foreground px-4 h-14 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
+          <div className="w-7 h-7 bg-primary border-2 border-foreground rounded-md flex items-center justify-center">
+            <Zap className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-bold">KasPay</span>
+          <span className="font-black">KasPay</span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "p-2 rounded-lg transition-colors",
+                "p-2 rounded-md transition-all border-2",
                 pathname === item.href
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground"
+                  ? "bg-primary text-primary-foreground border-foreground"
+                  : "text-muted-foreground border-transparent hover:border-foreground"
               )}
             >
-              <item.icon className="w-5 h-5" />
+              <item.icon className="w-4 h-4" />
             </Link>
           ))}
         </div>

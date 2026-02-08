@@ -67,8 +67,8 @@ export default function SettingsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-3xl font-black">Settings</h1>
+        <p className="text-muted-foreground mt-1 font-medium">
           Manage your account and API settings
         </p>
       </div>
@@ -82,11 +82,11 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Name</label>
+              <label className="text-sm font-bold mb-2 block">Name</label>
               <Input value={user.name || ""} readOnly />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Email</label>
+              <label className="text-sm font-bold mb-2 block">Email</label>
               <Input value={user.email} readOnly />
             </div>
           </CardContent>
@@ -96,7 +96,9 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-primary" />
+              <div className="w-8 h-8 bg-primary border-2 border-foreground rounded-md flex items-center justify-center shadow-brutal-sm">
+                <Wallet className="w-4 h-4" />
+              </div>
               <CardTitle>Wallet Address</CardTitle>
             </div>
             <CardDescription>
@@ -117,7 +119,7 @@ export default function SettingsPage() {
                 }
               >
                 {copiedAddress ? (
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 ) : (
                   <Copy className="w-4 h-4" />
                 )}
@@ -130,7 +132,9 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
+              <div className="w-8 h-8 bg-secondary border-2 border-foreground rounded-md flex items-center justify-center shadow-brutal-sm">
+                <Clock className="w-4 h-4" />
+              </div>
               <CardTitle>Payment Expiration</CardTitle>
             </div>
             <CardDescription>
@@ -144,10 +148,10 @@ export default function SettingsPage() {
                   key={opt.value}
                   onClick={() => saveExpiry(opt.value)}
                   disabled={savingExpiry}
-                  className={`py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                  className={`py-2 px-3 rounded-md border-2 text-sm font-bold transition-all ${
                     expiry === opt.value
-                      ? "bg-primary text-white border-primary"
-                      : "bg-card text-foreground border-input hover:bg-muted"
+                      ? "bg-primary text-primary-foreground border-foreground shadow-brutal-sm"
+                      : "bg-card text-foreground border-foreground/30 hover:border-foreground hover:shadow-brutal-sm"
                   }`}
                 >
                   {opt.label}
@@ -156,13 +160,13 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center gap-2 mt-3">
               {savingExpiry && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground font-bold">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   Saving...
                 </div>
               )}
               {expirySaved && (
-                <div className="flex items-center gap-2 text-sm text-green-600">
+                <div className="flex items-center gap-2 text-sm text-emerald-600 font-bold">
                   <CheckCircle2 className="w-3 h-3" />
                   Saved
                 </div>
@@ -175,7 +179,9 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Key className="w-5 h-5 text-primary" />
+              <div className="w-8 h-8 bg-accent border-2 border-foreground rounded-md flex items-center justify-center shadow-brutal-sm">
+                <Key className="w-4 h-4" />
+              </div>
               <CardTitle>API Key</CardTitle>
             </div>
             <CardDescription>
@@ -196,15 +202,15 @@ export default function SettingsPage() {
                 }
               >
                 {copiedApi ? (
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 ) : (
                   <Copy className="w-4 h-4" />
                 )}
               </Button>
             </div>
 
-            <div className="mt-4 p-4 bg-muted rounded-lg">
-              <p className="text-sm font-medium mb-2">API Usage Example</p>
+            <div className="mt-4 p-4 bg-muted border-2 border-foreground rounded-md shadow-brutal-sm">
+              <p className="text-sm font-black mb-2">API Usage Example</p>
               <pre className="text-xs font-mono text-muted-foreground overflow-x-auto">
 {`curl -X POST ${typeof window !== "undefined" ? window.location.origin : ""}/api/payments \\
   -H "Authorization: Bearer ${user.apiKey ? truncateAddress(user.apiKey, 4) : "YOUR_API_KEY"}" \\

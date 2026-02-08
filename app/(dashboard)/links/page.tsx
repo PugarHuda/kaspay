@@ -233,8 +233,8 @@ export default function LinksPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Payment Links</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl font-black">Payment Links</h1>
+          <p className="text-muted-foreground mt-1 font-medium">
             Create and manage your payment links
           </p>
         </div>
@@ -247,9 +247,9 @@ export default function LinksPage() {
       {/* Create Modal */}
       {showCreate && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-card rounded-md border-2 border-foreground shadow-brutal-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Create Payment Link</h2>
+              <h2 className="text-xl font-black">Create Payment Link</h2>
               <button
                 onClick={() => setShowCreate(false)}
                 className="text-muted-foreground hover:text-foreground"
@@ -260,7 +260,7 @@ export default function LinksPage() {
 
             <form onSubmit={(e) => createLink(e, false)} className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Title</label>
+                <label className="text-sm font-bold mb-2 block">Title</label>
                 <Input
                   placeholder="e.g., Premium Plan"
                   value={title}
@@ -270,7 +270,7 @@ export default function LinksPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-sm font-bold mb-2 block">
                   Description (optional)
                 </label>
                 <Input
@@ -281,17 +281,17 @@ export default function LinksPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-sm font-bold mb-2 block">
                   Currency
                 </label>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => setCurrency("KAS")}
-                    className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2 px-3 rounded-md border-2 text-sm font-bold transition-all ${
                       currency === "KAS"
-                        ? "bg-primary text-white border-primary"
-                        : "bg-card text-foreground border-input hover:bg-muted"
+                        ? "bg-primary text-primary-foreground border-foreground shadow-brutal-sm"
+                        : "bg-card text-foreground border-foreground/30 hover:border-foreground hover:shadow-brutal-sm"
                     }`}
                   >
                     KAS
@@ -299,10 +299,10 @@ export default function LinksPage() {
                   <button
                     type="button"
                     onClick={() => setCurrency("USD")}
-                    className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2 px-3 rounded-md border-2 text-sm font-bold transition-all ${
                       currency === "USD"
-                        ? "bg-primary text-white border-primary"
-                        : "bg-card text-foreground border-input hover:bg-muted"
+                        ? "bg-primary text-primary-foreground border-foreground shadow-brutal-sm"
+                        : "bg-card text-foreground border-foreground/30 hover:border-foreground hover:shadow-brutal-sm"
                     }`}
                   >
                     USD
@@ -316,7 +316,7 @@ export default function LinksPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-sm font-bold mb-2 block">
                   Amount ({currency})
                 </label>
                 <Input
@@ -331,7 +331,7 @@ export default function LinksPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-sm font-bold mb-2 block">
                   Success Message (optional)
                 </label>
                 <Input
@@ -342,7 +342,7 @@ export default function LinksPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-sm font-bold mb-2 block">
                   Redirect URL (optional)
                 </label>
                 <Input
@@ -356,7 +356,7 @@ export default function LinksPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-sm font-bold mb-2 block">
                   Payment Timeout
                 </label>
                 <div className="grid grid-cols-5 gap-1.5">
@@ -371,7 +371,7 @@ export default function LinksPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => setExpiryMinutes(opt.value)}
-                      className={`py-1.5 px-2 rounded-lg border text-xs font-medium transition-colors ${
+                      className={`py-1.5 px-2 rounded-md border-2 text-xs font-bold transition-all ${
                         expiryMinutes === opt.value
                           ? "bg-primary text-white border-primary"
                           : "bg-card text-foreground border-input hover:bg-muted"
@@ -387,7 +387,7 @@ export default function LinksPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-sm font-bold mb-2 block">
                   Link Expiration
                 </label>
                 <div className="grid grid-cols-5 gap-1.5">
@@ -402,7 +402,7 @@ export default function LinksPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => setLinkExpiresIn(opt.value)}
-                      className={`py-1.5 px-2 rounded-lg border text-xs font-medium transition-colors ${
+                      className={`py-1.5 px-2 rounded-md border-2 text-xs font-bold transition-all ${
                         linkExpiresIn === opt.value
                           ? "bg-primary text-white border-primary"
                           : "bg-card text-foreground border-input hover:bg-muted"
@@ -463,10 +463,10 @@ export default function LinksPage() {
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-3 py-2 rounded-lg border text-xs font-medium capitalize transition-colors ${
+                className={`px-3 py-2 rounded-md border-2 text-xs font-bold capitalize transition-all ${
                   statusFilter === s
-                    ? "bg-primary text-white border-primary"
-                    : "bg-card text-foreground border-input hover:bg-muted"
+                    ? "bg-primary text-primary-foreground border-foreground shadow-brutal-sm"
+                    : "bg-card text-foreground border-foreground/30 hover:border-foreground hover:shadow-brutal-sm"
                 }`}
               >
                 {s}
@@ -502,7 +502,7 @@ export default function LinksPage() {
             const badgeInfo = STATUS_BADGE_MAP[effective];
 
             return (
-              <Card key={link.id} className={`hover:shadow-md transition-shadow ${effective === "draft" ? "border-dashed" : ""}`}>
+              <Card key={link.id} className={`hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-brutal-sm transition-all ${effective === "draft" ? "border-dashed" : ""}`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-base">{link.title}</CardTitle>
@@ -517,7 +517,7 @@ export default function LinksPage() {
                   )}
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold mb-3">
+                  <div className="text-2xl font-black mb-3">
                     {link.currency === "USD"
                       ? `$${parseFloat(link.amount).toFixed(2)} USD`
                       : `${formatKAS(link.amount)} KAS`}
@@ -525,10 +525,10 @@ export default function LinksPage() {
 
                   {/* Link expiration countdown */}
                   {link.expiresAt && (
-                    <div className={`flex items-center gap-1.5 text-xs mb-3 px-2 py-1.5 rounded-md ${
+                    <div className={`flex items-center gap-1.5 text-xs mb-3 px-2 py-1.5 rounded-md border-2 font-bold ${
                       effective === "expired"
-                        ? "bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400"
-                        : "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
+                        ? "bg-destructive/10 text-destructive border-destructive"
+                        : "bg-secondary/30 text-secondary-foreground border-secondary"
                     }`}>
                       <Clock className="w-3.5 h-3.5" />
                       {effective === "expired"
@@ -617,9 +617,9 @@ export default function LinksPage() {
       {/* QR Code Modal */}
       {qrSlug && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-sm w-full p-6">
+          <div className="bg-card rounded-md border-2 border-foreground shadow-brutal-lg max-w-sm w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">QR Code</h2>
+              <h2 className="text-xl font-black">QR Code</h2>
               <button
                 onClick={() => setQrSlug(null)}
                 className="text-muted-foreground hover:text-foreground"
@@ -629,7 +629,7 @@ export default function LinksPage() {
             </div>
 
             <div className="flex justify-center mb-4" id="qr-container">
-              <div className="p-4 bg-white rounded-xl border">
+              <div className="p-4 bg-white border-2 border-foreground rounded-md shadow-brutal-sm">
                 <QRCodeSVG
                   value={`${window.location.origin}/pay/${qrSlug}`}
                   size={250}
@@ -687,9 +687,9 @@ export default function LinksPage() {
       {/* Embed Code Modal */}
       {embedSlug && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-lg w-full p-6">
+          <div className="bg-card rounded-md border-2 border-foreground shadow-brutal-lg max-w-lg w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Embed Payment Button</h2>
+              <h2 className="text-xl font-black">Embed Payment Button</h2>
               <button
                 onClick={() => setEmbedSlug(null)}
                 className="text-muted-foreground hover:text-foreground"
@@ -702,7 +702,7 @@ export default function LinksPage() {
               Copy this HTML to add a &quot;Pay with Kaspa&quot; button to your website:
             </p>
 
-            <pre className="bg-muted p-4 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap mb-4">
+            <pre className="bg-muted p-4 rounded-md border-2 border-foreground text-xs font-mono shadow-brutal-sm overflow-x-auto whitespace-pre-wrap mb-4">
 {`<!-- KasPay Payment Button -->
 <a href="${typeof window !== "undefined" ? window.location.origin : ""}/pay/${embedSlug}"
    target="_blank"
