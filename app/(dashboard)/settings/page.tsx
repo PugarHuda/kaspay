@@ -11,13 +11,24 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, CheckCircle2, Key, Wallet } from "lucide-react";
+import { Copy, CheckCircle2, Key, Wallet, Clock, Loader2 } from "lucide-react";
 import { truncateAddress } from "@/lib/utils";
 
+const EXPIRY_OPTIONS = [
+  { value: 15, label: "15 minutes" },
+  { value: 30, label: "30 minutes" },
+  { value: 60, label: "1 hour" },
+  { value: 120, label: "2 hours" },
+  { value: 1440, label: "24 hours" },
+];
+
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [copiedApi, setCopiedApi] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState(false);
+  const [expiry, setExpiry] = useState(user?.paymentExpiry || 30);
+  const [savingExpiry, setSavingExpiry] = useState(false);
+  const [expirySaved, setExpirySaved] = useState(false);
 
   function copyToClipboard(text: string, type: "api" | "address") {
     navigator.clipboard.writeText(text);
@@ -27,6 +38,27 @@ export default function SettingsPage() {
     } else {
       setCopiedAddress(true);
       setTimeout(() => setCopiedAddress(false), 2000);
+    }
+  }
+
+  async function saveExpiry(value: number) {
+    setExpiry(value);
+    setSavingExpiry(true);
+    try {
+      await fetch("/api/settings", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ paymentExpiry: value }),
+      });
+      setExpirySaved(true);
+      setTimeout(() => setExpirySaved(false), 2000);
+    } catch {
+      // ignore
+    } finally {
+      setSavingExpiry(false);
     }
   }
 
@@ -90,6 +122,51 @@ export default function SettingsPage() {
                   <Copy className="w-4 h-4" />
                 )}
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Payment Expiry */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              <CardTitle>Payment Expiration</CardTitle>
+            </div>
+            <CardDescription>
+              How long customers have to complete a payment before it expires
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              {EXPIRY_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => saveExpiry(opt.value)}
+                  disabled={savingExpiry}
+                  className={`py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                    expiry === opt.value
+                      ? "bg-primary text-white border-primary"
+                      : "bg-card text-foreground border-input hover:bg-muted"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              {savingExpiry && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Saving...
+                </div>
+              )}
+              {expirySaved && (
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Saved
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

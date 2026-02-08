@@ -15,6 +15,7 @@ interface User {
   name: string | null;
   kaspaAddress: string;
   apiKey?: string;
+  paymentExpiry?: number;
 }
 
 interface AuthContextType {

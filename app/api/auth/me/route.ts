@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
         name: user.name,
         kaspaAddress: user.kaspaAddress,
         apiKey: user.apiKey,
+        paymentExpiry: user.paymentExpiry,
         createdAt: user.createdAt,
       },
     });

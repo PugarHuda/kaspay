@@ -18,6 +18,7 @@ export const users = pgTable("users", {
   name: varchar("name", { length: 255 }),
   kaspaAddress: varchar("kaspa_address", { length: 100 }).notNull(),
   apiKey: uuid("api_key").notNull().unique().defaultRandom(),
+  paymentExpiry: integer("payment_expiry").notNull().default(30),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

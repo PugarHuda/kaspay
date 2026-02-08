@@ -8,9 +8,15 @@ export function cn(...inputs: ClassValue[]) {
 export function formatKAS(amount: number | string): string {
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
   return num.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
     maximumFractionDigits: 8,
   });
+}
+
+export function cleanAmount(amount: string): string {
+  const num = parseFloat(amount);
+  if (isNaN(num)) return amount;
+  return num.toString();
 }
 
 export function formatUSD(amount: number): string {

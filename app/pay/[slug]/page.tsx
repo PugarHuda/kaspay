@@ -15,7 +15,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatKAS } from "@/lib/utils";
+import { formatKAS, cleanAmount } from "@/lib/utils";
 
 interface PaymentData {
   id: string;
@@ -325,7 +325,7 @@ export default function PaymentPage() {
                 <div className="flex justify-center mb-6">
                   <div className="p-4 bg-white rounded-xl border-2 border-primary/20 shadow-sm">
                     <QRCodeSVG
-                      value={payment.kaspaAddress}
+                      value={`${payment.kaspaAddress}?amount=${cleanAmount(payment.amountExpected)}`}
                       size={220}
                       level="M"
                       fgColor="#1a1a2e"
