@@ -4,7 +4,7 @@ import { payments } from "@/lib/db/schema";
 import { verifyToken, extractTokenFromHeader } from "@/lib/auth/jwt";
 import { z } from "zod";
 import { and, eq, gt } from "drizzle-orm";
-import { usdToKas } from "@/lib/kaspa/rpc";
+import { usdToKas, kaspaAPI } from "@/lib/kaspa/rpc";
 
 const createPaymentSchema = z.object({
   paymentLinkSlug: z.string(),
@@ -101,6 +101,15 @@ export async function POST(req: NextRequest) {
       amountInKas = kasAmount.toFixed(8);
     }
 
+    // Fetch current balance so we can detect new incoming funds
+    let initialBalance = "0";
+    try {
+      const bal = await kaspaAPI.getBalance(merchant.kaspaAddress);
+      initialBalance = bal.toString();
+    } catch {
+      // default to 0 if can't fetch
+    }
+
     // Create payment record - use merchant's address directly
     const [payment] = await db
       .insert(payments)
@@ -109,6 +118,7 @@ export async function POST(req: NextRequest) {
         userId: link.userId,
         kaspaAddress: merchant.kaspaAddress,
         amountExpected: amountInKas,
+        initialBalance,
         customerEmail,
         customerName,
         metadata,

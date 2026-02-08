@@ -168,7 +168,7 @@ export default function PaymentPage() {
 
   function copyAmount() {
     if (!payment) return;
-    navigator.clipboard.writeText(payment.amountExpected);
+    navigator.clipboard.writeText(cleanAmount(payment.amountExpected));
   }
 
   if (loading) {
@@ -368,7 +368,7 @@ export default function PaymentPage() {
                     onClick={copyAmount}
                   >
                     <span className="font-mono font-bold">
-                      {payment.amountExpected} KAS
+                      {cleanAmount(payment.amountExpected)} KAS
                     </span>
                     <Copy className="w-4 h-4 text-muted-foreground" />
                   </div>

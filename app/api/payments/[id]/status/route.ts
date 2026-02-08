@@ -59,12 +59,14 @@ export async function GET(
     try {
       const balance = await kaspaAPI.getBalance(payment.kaspaAddress);
       const expectedAmount = parseFloat(payment.amountExpected);
+      const initialBalance = parseFloat(payment.initialBalance || "0");
+      const requiredBalance = initialBalance + expectedAmount;
 
       console.log(
-        `[Payment ${payment.id.slice(0, 8)}] balance=${balance} KAS, expected=${expectedAmount} KAS`
+        `[Payment ${payment.id.slice(0, 8)}] balance=${balance} KAS, initial=${initialBalance} KAS, expected=${expectedAmount} KAS, required=${requiredBalance} KAS`
       );
 
-      if (balance >= expectedAmount) {
+      if (balance >= requiredBalance) {
         const utxos = await kaspaAPI.getUtxosByAddress(payment.kaspaAddress);
 
         if (utxos.length > 0) {

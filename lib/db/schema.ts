@@ -51,6 +51,7 @@ export const payments = pgTable("payments", {
     precision: 20,
     scale: 8,
   }).notNull(),
+  initialBalance: decimal("initial_balance", { precision: 20, scale: 8 }).notNull().default("0"),
   amountReceived: decimal("amount_received", { precision: 20, scale: 8 }),
   txId: varchar("tx_id", { length: 100 }),
   blockHash: varchar("block_hash", { length: 100 }),
