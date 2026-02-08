@@ -4,7 +4,9 @@
 
 Built for **Kaspathon 2026** | Track: **Payments & Commerce**
 
-**[Live Demo](https://kaspay-flame.vercel.app)** | **[API Docs](https://kaspay-flame.vercel.app/docs)** | **[Interactive Demo](https://kaspay-flame.vercel.app/demo)**
+**[Live Demo](https://kaspay-flame.vercel.app)** | **[API Docs](https://kaspay-flame.vercel.app/docs)** | **[Interactive Demo](https://kaspay-flame.vercel.app/demo)** | **[Demo Video](https://youtu.be/ltFnGWQzG64)**
+
+[![KasPay Demo Video](https://img.youtube.com/vi/ltFnGWQzG64/maxresdefault.jpg)](https://youtu.be/ltFnGWQzG64)
 
 ![KasPay Home](./public/kaspay-home.png)
 
@@ -324,7 +326,7 @@ The full git commit history is available to verify the development timeline and 
 | GitHub Repository | This repo |
 | Live Demo | [kaspay-flame.vercel.app](https://kaspay-flame.vercel.app) |
 | Interactive Demo | [/demo](https://kaspay-flame.vercel.app/demo) |
-| Demo Video (3 min) | _Coming soon_ |
+| Demo Video (3 min) | [Watch on YouTube](https://youtu.be/ltFnGWQzG64) |
 | Screenshot | `./public/kaspay-home.png` |
 | README with setup | This file |
 | AI Usage Disclosure | See above |
