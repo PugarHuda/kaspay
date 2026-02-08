@@ -15,6 +15,10 @@ import {
   Link2,
   TrendingUp,
   Loader2,
+  Activity,
+  Blocks,
+  Gauge,
+  Network,
 } from "lucide-react";
 import { formatKAS, formatDate } from "@/lib/utils";
 import {
@@ -54,9 +58,18 @@ interface DashboardStats {
   }>;
 }
 
+interface NetworkStats {
+  blockCount: number;
+  headerCount: number;
+  difficulty: number;
+  virtualDaaScore: number;
+  networkName: string;
+}
+
 export default function DashboardPage() {
   const { token } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [network, setNetwork] = useState<NetworkStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -69,6 +82,11 @@ export default function DashboardPage() {
       .then(setStats)
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    fetch("/api/network")
+      .then((res) => res.json())
+      .then(setNetwork)
+      .catch(console.error);
   }, [token]);
 
   if (loading) {
@@ -264,6 +282,59 @@ export default function DashboardPage() {
           )}
         </CardContent>
       </Card>
+      {/* Kaspa Network Stats */}
+      {network && (
+        <Card className="mt-8">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-primary" />
+              <CardTitle>Kaspa Network (Live)</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <Blocks className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Blocks</span>
+                </div>
+                <p className="text-lg font-bold">
+                  {network.blockCount?.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <Gauge className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Difficulty</span>
+                </div>
+                <p className="text-lg font-bold">
+                  {network.difficulty
+                    ? (network.difficulty / 1e12).toFixed(2) + "T"
+                    : "N/A"}
+                </p>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">DAA Score</span>
+                </div>
+                <p className="text-lg font-bold">
+                  {network.virtualDaaScore?.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <Network className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Network</span>
+                </div>
+                <p className="text-lg font-bold capitalize">
+                  {network.networkName || "testnet-10"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

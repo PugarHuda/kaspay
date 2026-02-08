@@ -30,6 +30,8 @@ interface PaymentData {
   confirmedAt?: string;
   currency?: string;
   originalUsdAmount?: string | null;
+  successMessage?: string | null;
+  redirectUrl?: string | null;
 }
 
 export default function PaymentPage() {
@@ -265,7 +267,7 @@ export default function PaymentPage() {
                   Payment Confirmed!
                 </h2>
                 <p className="text-muted-foreground mb-4">
-                  Your transaction has been confirmed on the Kaspa blockchain.
+                  {payment.successMessage || "Your transaction has been confirmed on the Kaspa blockchain."}
                 </p>
 
                 {payment.txId && (
@@ -294,6 +296,14 @@ export default function PaymentPage() {
                       View Receipt
                     </Button>
                   </a>
+                  {payment.redirectUrl && (
+                    <a href={payment.redirectUrl} target="_blank" rel="noopener noreferrer">
+                      <Button className="w-full">
+                        Continue
+                        <ExternalLink className="w-4 h-4 ml-2" />
+                      </Button>
+                    </a>
+                  )}
                 </div>
               </motion.div>
             ) : payment.status === "expired" ? (
@@ -315,7 +325,7 @@ export default function PaymentPage() {
                 <div className="flex justify-center mb-6">
                   <div className="p-4 bg-white rounded-xl border-2 border-primary/20 shadow-sm">
                     <QRCodeSVG
-                      value={`kaspa:${payment.kaspaAddress.replace("kaspa:", "")}?amount=${payment.amountExpected}`}
+                      value={`${payment.kaspaAddress}?amount=${payment.amountExpected}`}
                       size={220}
                       level="M"
                       fgColor="#1a1a2e"

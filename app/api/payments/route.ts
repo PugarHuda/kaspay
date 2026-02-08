@@ -67,6 +67,8 @@ export async function POST(req: NextRequest) {
         description: link.description,
         currency: link.currency,
         originalUsdAmount: link.currency === "USD" ? link.amount : null,
+        successMessage: link.successMessage,
+        redirectUrl: link.redirectUrl,
       });
     }
 
@@ -124,6 +126,8 @@ export async function POST(req: NextRequest) {
       description: link.description,
       currency: link.currency,
       originalUsdAmount,
+      successMessage: link.successMessage,
+      redirectUrl: link.redirectUrl,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -19,7 +19,9 @@ import {
   X,
   CheckCircle2,
   Code2,
+  Download,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { formatKAS, formatDate } from "@/lib/utils";
 
 interface PaymentLink {
@@ -48,6 +50,9 @@ export default function LinksPage() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState<"KAS" | "USD">("KAS");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [redirectUrl, setRedirectUrl] = useState("");
+  const [qrSlug, setQrSlug] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLinks();
@@ -85,6 +90,8 @@ export default function LinksPage() {
           description: description || undefined,
           amount: parseFloat(amount),
           currency,
+          successMessage: successMessage || undefined,
+          redirectUrl: redirectUrl || undefined,
         }),
       });
 
@@ -95,6 +102,8 @@ export default function LinksPage() {
       setDescription("");
       setAmount("");
       setCurrency("KAS");
+      setSuccessMessage("");
+      setRedirectUrl("");
       fetchLinks();
     } catch (err) {
       console.error("Failed to create link:", err);
@@ -219,6 +228,31 @@ export default function LinksPage() {
                 />
               </div>
 
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Success Message (optional)
+                </label>
+                <Input
+                  placeholder="e.g., Thank you for your purchase!"
+                  value={successMessage}
+                  onChange={(e) => setSuccessMessage(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Redirect URL (optional)
+                </label>
+                <Input
+                  placeholder="e.g., https://yoursite.com/thank-you"
+                  value={redirectUrl}
+                  onChange={(e) => setRedirectUrl(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Customer will be redirected here after payment
+                </p>
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <Button
                   type="button"
@@ -306,6 +340,14 @@ export default function LinksPage() {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => setQrSlug(link.slug)}
+                    title="QR Code"
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() =>
                       window.open(`/pay/${link.slug}`, "_blank")
                     }
@@ -320,6 +362,76 @@ export default function LinksPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {qrSlug && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl shadow-xl max-w-sm w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">QR Code</h2>
+              <button
+                onClick={() => setQrSlug(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex justify-center mb-4" id="qr-container">
+              <div className="p-4 bg-white rounded-xl border">
+                <QRCodeSVG
+                  value={`${window.location.origin}/pay/${qrSlug}`}
+                  size={250}
+                  level="M"
+                  fgColor="#1a1a2e"
+                  includeMargin={false}
+                />
+              </div>
+            </div>
+
+            <p className="text-xs text-center text-muted-foreground mb-4">
+              {window.location.origin}/pay/{qrSlug}
+            </p>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setQrSlug(null)}
+                className="flex-1"
+              >
+                Close
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  const svg = document.querySelector("#qr-container svg");
+                  if (!svg) return;
+                  const svgData = new XMLSerializer().serializeToString(svg);
+                  const canvas = document.createElement("canvas");
+                  canvas.width = 500;
+                  canvas.height = 500;
+                  const ctx = canvas.getContext("2d");
+                  const img = new Image();
+                  img.onload = () => {
+                    ctx?.fillRect(0, 0, 500, 500);
+                    ctx!.fillStyle = "white";
+                    ctx?.fillRect(0, 0, 500, 500);
+                    ctx?.drawImage(img, 25, 25, 450, 450);
+                    const a = document.createElement("a");
+                    a.download = `kaspay-${qrSlug}.png`;
+                    a.href = canvas.toDataURL("image/png");
+                    a.click();
+                  };
+                  img.src = "data:image/svg+xml;base64," + btoa(svgData);
+                }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download PNG
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
