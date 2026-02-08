@@ -325,7 +325,7 @@ export default function PaymentPage() {
                 <div className="flex justify-center mb-6">
                   <div className="p-4 bg-white rounded-xl border-2 border-primary/20 shadow-sm">
                     <QRCodeSVG
-                      value={`${payment.kaspaAddress}?amount=${payment.amountExpected}`}
+                      value={payment.kaspaAddress}
                       size={220}
                       level="M"
                       fgColor="#1a1a2e"
