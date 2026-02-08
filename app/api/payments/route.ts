@@ -45,31 +45,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check for an existing pending payment for this link that hasn't expired
+    // Check for the most recent payment for this link (any status)
     const existingPayment = await db.query.payments.findFirst({
-      where: (payments, { eq, and, gt }) =>
-        and(
-          eq(payments.paymentLinkId, link.id),
-          eq(payments.status, "pending"),
-          gt(payments.expiresAt, new Date())
-        ),
+      where: (payments, { eq }) => eq(payments.paymentLinkId, link.id),
       orderBy: (payments, { desc }) => [desc(payments.createdAt)],
     });
 
     if (existingPayment) {
-      return NextResponse.json({
-        id: existingPayment.id,
-        kaspaAddress: existingPayment.kaspaAddress,
-        amountExpected: existingPayment.amountExpected,
-        expiresAt: existingPayment.expiresAt,
-        status: existingPayment.status,
-        title: link.title,
-        description: link.description,
-        currency: link.currency,
-        originalUsdAmount: link.currency === "USD" ? link.amount : null,
-        successMessage: link.successMessage,
-        redirectUrl: link.redirectUrl,
-      });
+      let status = existingPayment.status;
+
+      // Mark as expired if time has passed
+      if (status === "pending" && existingPayment.expiresAt && new Date(existingPayment.expiresAt) < new Date()) {
+        status = "expired";
+        await db
+          .update(payments)
+          .set({ status: "expired" })
+          .where(eq(payments.id, existingPayment.id));
+      }
+
+      // Return existing payment if still pending or already confirmed/expired
+      if (status === "pending" || status === "confirmed" || status === "expired") {
+        return NextResponse.json({
+          id: existingPayment.id,
+          kaspaAddress: existingPayment.kaspaAddress,
+          amountExpected: existingPayment.amountExpected,
+          expiresAt: existingPayment.expiresAt,
+          status,
+          title: link.title,
+          description: link.description,
+          currency: link.currency,
+          originalUsdAmount: link.currency === "USD" ? link.amount : null,
+          successMessage: link.successMessage,
+          redirectUrl: link.redirectUrl,
+          txId: existingPayment.txId,
+          confirmedAt: existingPayment.confirmedAt,
+        });
+      }
     }
 
     // Get merchant's Kaspa address

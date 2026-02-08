@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/lib/auth/context";
 import {
   Card,
@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   Code2,
   Download,
+  Search,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { formatKAS, formatDate } from "@/lib/utils";
@@ -55,6 +56,23 @@ export default function LinksPage() {
   const [redirectUrl, setRedirectUrl] = useState("");
   const [expiryMinutes, setExpiryMinutes] = useState(30);
   const [qrSlug, setQrSlug] = useState<string | null>(null);
+  const [searchLinks, setSearchLinks] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const filteredLinks = useMemo(() => {
+    return links.filter((l) => {
+      if (statusFilter !== "all" && l.status !== statusFilter) return false;
+      if (searchLinks) {
+        const q = searchLinks.toLowerCase();
+        return (
+          l.title.toLowerCase().includes(q) ||
+          (l.description || "").toLowerCase().includes(q) ||
+          l.slug.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [links, searchLinks, statusFilter]);
 
   useEffect(() => {
     fetchLinks();
@@ -309,6 +327,36 @@ export default function LinksPage() {
         </div>
       )}
 
+      {/* Search & Filter */}
+      {links.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by title, description..."
+              value={searchLinks}
+              onChange={(e) => setSearchLinks(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex gap-1.5">
+            {["all", "active", "inactive"].map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`px-3 py-2 rounded-lg border text-xs font-medium capitalize transition-colors ${
+                  statusFilter === s
+                    ? "bg-primary text-white border-primary"
+                    : "bg-card text-foreground border-input hover:bg-muted"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Links Grid */}
       {links.length === 0 ? (
         <Card>
@@ -322,9 +370,15 @@ export default function LinksPage() {
             </Button>
           </CardContent>
         </Card>
+      ) : filteredLinks.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            No links match your search.
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {links.map((link) => (
+          {filteredLinks.map((link) => (
             <Card key={link.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">

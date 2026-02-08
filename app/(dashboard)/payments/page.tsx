@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/lib/auth/context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Download } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Download, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatKAS, formatDate, truncateAddress } from "@/lib/utils";
 
@@ -22,10 +23,14 @@ interface Payment {
   paymentLink: { title: string } | null;
 }
 
+const STATUS_FILTERS = ["all", "confirmed", "pending", "expired"] as const;
+
 export default function PaymentsPage() {
   const { token } = useAuth();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     if (!token) return;
@@ -39,6 +44,23 @@ export default function PaymentsPage() {
       .finally(() => setLoading(false));
   }, [token]);
 
+  const filtered = useMemo(() => {
+    return payments.filter((p) => {
+      if (statusFilter !== "all" && p.status !== statusFilter) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return (
+          (p.paymentLink?.title || "").toLowerCase().includes(q) ||
+          (p.customerEmail || "").toLowerCase().includes(q) ||
+          (p.customerName || "").toLowerCase().includes(q) ||
+          p.id.toLowerCase().includes(q) ||
+          (p.txId || "").toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [payments, search, statusFilter]);
+
   function exportCSV() {
     const headers = [
       "ID",
@@ -50,7 +72,7 @@ export default function PaymentsPage() {
       "TX ID",
       "Date",
     ];
-    const rows = payments.map((p) => [
+    const rows = filtered.map((p) => [
       p.id,
       p.paymentLink?.title || "Direct",
       p.amountExpected,
@@ -96,12 +118,46 @@ export default function PaymentsPage() {
         )}
       </div>
 
+      {/* Search & Filter */}
+      {payments.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by title, customer, TX ID..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex gap-1.5">
+            {STATUS_FILTERS.map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`px-3 py-2 rounded-lg border text-xs font-medium capitalize transition-colors ${
+                  statusFilter === s
+                    ? "bg-primary text-white border-primary"
+                    : "bg-card text-foreground border-input hover:bg-muted"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
           {payments.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               No payments yet. Share your payment links to start receiving
               payments.
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              No payments match your search.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -129,7 +185,7 @@ export default function PaymentsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.map((payment) => (
+                  {filtered.map((payment) => (
                     <tr
                       key={payment.id}
                       className="border-b last:border-0 hover:bg-muted/20"
