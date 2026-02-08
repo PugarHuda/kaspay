@@ -28,6 +28,8 @@ interface PaymentData {
   txId?: string;
   amountReceived?: string;
   confirmedAt?: string;
+  currency?: string;
+  originalUsdAmount?: string | null;
 }
 
 export default function PaymentPage() {
@@ -215,13 +217,26 @@ export default function PaymentPage() {
             <p className="text-sm opacity-70 mt-1">{payment.description}</p>
           )}
           <div className="mt-4">
-            <div className="text-3xl font-bold">
-              {formatKAS(payment.amountExpected)} KAS
-            </div>
-            {usdAmount > 0 && (
-              <div className="text-sm opacity-70 mt-1">
-                ≈ ${usdAmount.toFixed(2)} USD
-              </div>
+            {payment.originalUsdAmount ? (
+              <>
+                <div className="text-3xl font-bold">
+                  ${parseFloat(payment.originalUsdAmount).toFixed(2)} USD
+                </div>
+                <div className="text-sm opacity-70 mt-1">
+                  = {formatKAS(payment.amountExpected)} KAS (live rate)
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-3xl font-bold">
+                  {formatKAS(payment.amountExpected)} KAS
+                </div>
+                {usdAmount > 0 && (
+                  <div className="text-sm opacity-70 mt-1">
+                    ≈ ${usdAmount.toFixed(2)} USD
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

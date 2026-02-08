@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
         email: newUser.email,
         name: newUser.name,
         kaspaAddress: newUser.kaspaAddress,
+        apiKey: newUser.apiKey,
       },
       token,
     });

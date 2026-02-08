@@ -47,6 +47,7 @@ export default function LinksPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState<"KAS" | "USD">("KAS");
 
   useEffect(() => {
     fetchLinks();
@@ -83,6 +84,7 @@ export default function LinksPage() {
           title,
           description: description || undefined,
           amount: parseFloat(amount),
+          currency,
         }),
       });
 
@@ -92,6 +94,7 @@ export default function LinksPage() {
       setTitle("");
       setDescription("");
       setAmount("");
+      setCurrency("KAS");
       fetchLinks();
     } catch (err) {
       console.error("Failed to create link:", err);
@@ -168,13 +171,48 @@ export default function LinksPage() {
 
               <div>
                 <label className="text-sm font-medium mb-2 block">
-                  Amount (KAS)
+                  Currency
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrency("KAS")}
+                    className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                      currency === "KAS"
+                        ? "bg-primary text-white border-primary"
+                        : "bg-card text-foreground border-input hover:bg-muted"
+                    }`}
+                  >
+                    KAS
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrency("USD")}
+                    className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                      currency === "USD"
+                        ? "bg-primary text-white border-primary"
+                        : "bg-card text-foreground border-input hover:bg-muted"
+                    }`}
+                  >
+                    USD
+                  </button>
+                </div>
+                {currency === "USD" && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Auto-converts to KAS at current market rate when customer pays
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Amount ({currency})
                 </label>
                 <Input
                   type="number"
-                  step="0.00000001"
-                  min="0.00000001"
-                  placeholder="100"
+                  step={currency === "USD" ? "0.01" : "0.00000001"}
+                  min={currency === "USD" ? "0.01" : "0.00000001"}
+                  placeholder={currency === "USD" ? "10.00" : "100"}
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   required
@@ -238,7 +276,9 @@ export default function LinksPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold mb-4">
-                  {formatKAS(link.amount)} KAS
+                  {link.currency === "USD"
+                    ? `$${parseFloat(link.amount).toFixed(2)} USD`
+                    : `${formatKAS(link.amount)} KAS`}
                 </div>
 
                 <div className="flex gap-2">

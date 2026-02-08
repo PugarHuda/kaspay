@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
         email: user.email,
         name: user.name,
         kaspaAddress: user.kaspaAddress,
+        apiKey: user.apiKey,
       },
       token,
     });

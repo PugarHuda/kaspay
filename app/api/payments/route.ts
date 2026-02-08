@@ -4,6 +4,7 @@ import { payments } from "@/lib/db/schema";
 import { verifyToken, extractTokenFromHeader } from "@/lib/auth/jwt";
 import { z } from "zod";
 import { and, eq, gt } from "drizzle-orm";
+import { usdToKas } from "@/lib/kaspa/rpc";
 
 const createPaymentSchema = z.object({
   paymentLinkSlug: z.string(),
@@ -56,7 +57,6 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingPayment) {
-      // Return existing pending payment instead of creating a new one
       return NextResponse.json({
         id: existingPayment.id,
         kaspaAddress: existingPayment.kaspaAddress,
@@ -65,6 +65,8 @@ export async function POST(req: NextRequest) {
         status: existingPayment.status,
         title: link.title,
         description: link.description,
+        currency: link.currency,
+        originalUsdAmount: link.currency === "USD" ? link.amount : null,
       });
     }
 
@@ -80,6 +82,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // If link is priced in USD, convert to KAS at current rate
+    let amountInKas = link.amount;
+    let originalUsdAmount: string | null = null;
+
+    if (link.currency === "USD") {
+      const usdAmount = parseFloat(link.amount);
+      const kasAmount = await usdToKas(usdAmount);
+      if (kasAmount <= 0) {
+        return NextResponse.json(
+          { error: "Unable to fetch KAS/USD price for conversion" },
+          { status: 503 }
+        );
+      }
+      originalUsdAmount = link.amount;
+      amountInKas = kasAmount.toFixed(8);
+    }
+
     // Create payment record - use merchant's address directly
     const [payment] = await db
       .insert(payments)
@@ -87,7 +106,7 @@ export async function POST(req: NextRequest) {
         paymentLinkId: link.id,
         userId: link.userId,
         kaspaAddress: merchant.kaspaAddress,
-        amountExpected: link.amount,
+        amountExpected: amountInKas,
         customerEmail,
         customerName,
         metadata,
@@ -103,6 +122,8 @@ export async function POST(req: NextRequest) {
       status: payment.status,
       title: link.title,
       description: link.description,
+      currency: link.currency,
+      originalUsdAmount,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
