@@ -321,15 +321,23 @@ export default function PaymentPage() {
               </motion.div>
             ) : (
               <motion.div key="pending" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                {/* QR Code - address only for max wallet compatibility */}
+                {/* Testnet notice */}
+                {payment.kaspaAddress.startsWith("kaspatest:") && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg mb-4 text-xs">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>Testnet — make sure your wallet is set to <strong>Testnet-10</strong> network</span>
+                  </div>
+                )}
+
+                {/* QR Code with Kaspa URI (address + amount) */}
                 <div className="flex justify-center mb-4">
                   <div className="p-4 bg-white rounded-xl border-2 border-primary/20 shadow-sm">
                     <QRCodeSVG
-                      value={payment.kaspaAddress}
+                      value={`${payment.kaspaAddress}?amount=${cleanAmount(payment.amountExpected)}`}
                       size={200}
-                      level="M"
+                      level="H"
                       fgColor="#1a1a2e"
-                      includeMargin={false}
+                      includeMargin
                     />
                   </div>
                 </div>
