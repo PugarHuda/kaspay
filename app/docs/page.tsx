@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Zap, ArrowLeft, Copy, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Copy, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { KasPayLogo, KasPayWordmark } from "@/components/ui/logo";
 import { useState } from "react";
 
 const endpoints = [
@@ -140,14 +141,14 @@ const endpoints = [
 
 function MethodBadge({ method }: { method: string }) {
   const colors: Record<string, string> = {
-    GET: "bg-blue-100 text-blue-800",
-    POST: "bg-green-100 text-green-800",
-    PATCH: "bg-yellow-100 text-yellow-800",
-    DELETE: "bg-red-100 text-red-800",
+    GET: "bg-blue-300 text-blue-900",
+    POST: "bg-emerald-300 text-emerald-900",
+    PATCH: "bg-amber-300 text-amber-900",
+    DELETE: "bg-red-300 text-red-900",
   };
   return (
     <span
-      className={`px-2 py-0.5 rounded text-xs font-bold ${colors[method] || "bg-gray-100"}`}
+      className={`px-2.5 py-0.5 rounded-md border-2 border-foreground text-xs font-black shadow-brutal-sm ${colors[method] || "bg-muted"}`}
     >
       {method}
     </span>
@@ -166,17 +167,14 @@ export default function DocsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
-      <nav className="border-b sticky top-0 bg-background/90 backdrop-blur-sm z-50">
+      <nav className="border-b-2 border-foreground sticky top-0 bg-card z-50">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-bold">KasPay</span>
+              <KasPayWordmark size="sm" />
             </Link>
-            <span className="text-muted-foreground">/</span>
-            <span className="font-medium">API Documentation</span>
+            <span className="text-foreground font-black">/</span>
+            <span className="font-bold">API Documentation</span>
           </div>
           <Link href="/register">
             <Button size="sm">Get API Key</Button>
@@ -187,16 +185,16 @@ export default function DocsPage() {
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-4xl font-bold mb-4">KasPay API</h1>
-          <p className="text-lg text-muted-foreground mb-6">
+          <h1 className="text-4xl font-black mb-4">KasPay API</h1>
+          <p className="text-lg text-muted-foreground mb-6 font-medium">
             Integrate Kaspa payments into your application with our simple REST
             API. Accept payments, create payment links, and receive webhook
             notifications.
           </p>
 
-          <div className="bg-muted/50 border rounded-lg p-4">
-            <p className="text-sm font-medium mb-1">Base URL</p>
-            <code className="text-sm font-mono text-primary">
+          <div className="bg-muted border-2 border-foreground rounded-md p-4 shadow-brutal-sm">
+            <p className="text-sm font-black mb-1">Base URL</p>
+            <code className="text-sm font-mono text-primary font-bold">
               {typeof window !== "undefined" ? window.location.origin : "https://kaspay.vercel.app"}
             </code>
           </div>
@@ -204,65 +202,65 @@ export default function DocsPage() {
 
         {/* Auth Section */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">Authentication</h2>
-          <p className="text-muted-foreground mb-4">
+          <h2 className="text-2xl font-black mb-4">Authentication</h2>
+          <p className="text-muted-foreground mb-4 font-medium">
             Protected endpoints require a JWT token in the Authorization header:
           </p>
-          <pre className="bg-muted p-4 rounded-lg text-sm font-mono overflow-x-auto">
+          <pre className="bg-muted border-2 border-foreground p-4 rounded-md text-sm font-mono overflow-x-auto shadow-brutal-sm font-medium">
             Authorization: Bearer your-jwt-token
           </pre>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground mt-2 font-medium">
             Get your token by calling POST /api/auth/login or POST /api/auth/register.
           </p>
         </div>
 
         {/* Endpoints */}
-        <h2 className="text-2xl font-bold mb-6">Endpoints</h2>
+        <h2 className="text-2xl font-black mb-6">Endpoints</h2>
         <div className="space-y-8">
           {endpoints.map((ep, i) => (
-            <div key={i} className="border rounded-xl overflow-hidden">
-              <div className="bg-muted/30 px-4 py-3 flex items-center gap-3 border-b">
+            <div key={i} className="border-2 border-foreground rounded-md overflow-hidden shadow-brutal">
+              <div className="bg-muted px-4 py-3 flex items-center gap-3 border-b-2 border-foreground">
                 <MethodBadge method={ep.method} />
-                <code className="text-sm font-mono font-medium">{ep.path}</code>
+                <code className="text-sm font-mono font-bold">{ep.path}</code>
                 {ep.auth && (
-                  <span className="ml-auto text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+                  <span className="ml-auto text-xs bg-amber-300 text-amber-900 px-2.5 py-0.5 rounded-md border-2 border-foreground font-black shadow-brutal-sm">
                     Auth Required
                   </span>
                 )}
               </div>
               <div className="p-4">
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-sm text-muted-foreground mb-4 font-medium">
                   {ep.description}
                 </p>
 
                 {ep.body && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-muted-foreground uppercase">
+                      <p className="text-xs font-black text-muted-foreground uppercase">
                         Request Body
                       </p>
                       <button
                         onClick={() => copyCode(ep.body!, i)}
-                        className="text-xs text-muted-foreground hover:text-foreground"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {copiedIdx === i ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                         ) : (
                           <Copy className="w-3.5 h-3.5" />
                         )}
                       </button>
                     </div>
-                    <pre className="bg-muted p-3 rounded-lg text-xs font-mono overflow-x-auto">
+                    <pre className="bg-muted border-2 border-foreground p-3 rounded-md text-xs font-mono overflow-x-auto shadow-brutal-sm">
                       {ep.body}
                     </pre>
                   </div>
                 )}
 
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase mb-2">
+                  <p className="text-xs font-black text-muted-foreground uppercase mb-2">
                     Response
                   </p>
-                  <pre className="bg-muted p-3 rounded-lg text-xs font-mono overflow-x-auto">
+                  <pre className="bg-muted border-2 border-foreground p-3 rounded-md text-xs font-mono overflow-x-auto shadow-brutal-sm">
                     {ep.response}
                   </pre>
                 </div>
@@ -273,12 +271,12 @@ export default function DocsPage() {
 
         {/* Webhook Section */}
         <div className="mt-12 mb-12">
-          <h2 className="text-2xl font-bold mb-4">Webhook Signatures</h2>
-          <p className="text-muted-foreground mb-4">
-            Each webhook delivery includes an <code className="bg-muted px-1 py-0.5 rounded text-sm">X-KasPay-Signature</code> header
+          <h2 className="text-2xl font-black mb-4">Webhook Signatures</h2>
+          <p className="text-muted-foreground mb-4 font-medium">
+            Each webhook delivery includes an <code className="bg-muted border-2 border-foreground px-1.5 py-0.5 rounded-md text-sm font-bold">X-KasPay-Signature</code> header
             containing an HMAC-SHA256 signature of the payload using your webhook secret.
           </p>
-          <pre className="bg-muted p-4 rounded-lg text-xs font-mono overflow-x-auto">
+          <pre className="bg-muted border-2 border-foreground p-4 rounded-md text-xs font-mono overflow-x-auto shadow-brutal-sm">
 {`// Verify webhook signature (Node.js)
 const crypto = require('crypto');
 
@@ -294,44 +292,51 @@ function verifySignature(payload, signature, secret) {
 
         {/* Flow diagram */}
         <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-4">Payment Flow</h2>
-          <div className="bg-muted/30 border rounded-xl p-6">
+          <h2 className="text-2xl font-black mb-4">Payment Flow</h2>
+          <div className="bg-card border-2 border-foreground rounded-md p-6 shadow-brutal">
             <div className="space-y-4 text-sm">
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">1</div>
-                <div>
-                  <p className="font-medium">Merchant creates a payment link</p>
-                  <p className="text-muted-foreground">POST /api/links with amount and title</p>
+              {[
+                {
+                  step: "1",
+                  title: "Merchant creates a payment link",
+                  desc: "POST /api/links with amount and title",
+                  color: "bg-primary",
+                },
+                {
+                  step: "2",
+                  title: "Customer opens the payment page",
+                  desc: "POST /api/payments creates a payment session with the merchant's Kaspa address",
+                  color: "bg-primary",
+                },
+                {
+                  step: "3",
+                  title: "Customer sends KAS to the address",
+                  desc: "QR code and address displayed. Customer pays from any Kaspa wallet.",
+                  color: "bg-secondary",
+                },
+                {
+                  step: "4",
+                  title: "KasPay verifies on-chain",
+                  desc: "GET /api/payments/:id/status polls the Kaspa blockchain REST API for balance + UTXOs",
+                  color: "bg-secondary",
+                },
+                {
+                  step: "5",
+                  title: "Payment confirmed, webhook sent",
+                  desc: 'Status updated to "confirmed", webhook delivered to merchant\'s endpoint with HMAC signature',
+                  color: "bg-accent",
+                },
+              ].map((item) => (
+                <div key={item.step} className="flex items-start gap-3">
+                  <div className={`w-8 h-8 ${item.color} border-2 border-foreground rounded-md flex items-center justify-center text-xs font-black shrink-0 shadow-brutal-sm`}>
+                    {item.step}
+                  </div>
+                  <div>
+                    <p className="font-bold">{item.title}</p>
+                    <p className="text-muted-foreground font-medium">{item.desc}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">2</div>
-                <div>
-                  <p className="font-medium">Customer opens the payment page</p>
-                  <p className="text-muted-foreground">POST /api/payments creates a payment session with the merchant&apos;s Kaspa address</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">3</div>
-                <div>
-                  <p className="font-medium">Customer sends KAS to the address</p>
-                  <p className="text-muted-foreground">QR code and address displayed. Customer pays from any Kaspa wallet.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">4</div>
-                <div>
-                  <p className="font-medium">KasPay verifies on-chain</p>
-                  <p className="text-muted-foreground">GET /api/payments/:id/status polls the Kaspa blockchain REST API for balance + UTXOs</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">5</div>
-                <div>
-                  <p className="font-medium">Payment confirmed, webhook sent</p>
-                  <p className="text-muted-foreground">Status updated to &quot;confirmed&quot;, webhook delivered to merchant&apos;s endpoint with HMAC signature</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>

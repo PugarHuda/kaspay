@@ -7,13 +7,13 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
-  Zap,
   ExternalLink,
   Printer,
   Copy,
   CheckCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { KasPayLogo } from "@/components/ui/logo";
 import { formatKAS, formatDate } from "@/lib/utils";
 
 interface ReceiptData {
@@ -75,19 +75,21 @@ export default function ReceiptPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-md" />
       </div>
     );
   }
 
   if (error || !receipt) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-        <div className="bg-card rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
-          <AlertCircle className="w-16 h-16 text-destructive mx-auto mb-4" />
-          <h1 className="text-xl font-bold mb-2">Receipt Not Found</h1>
-          <p className="text-muted-foreground">{error || "This payment does not exist."}</p>
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="bg-card rounded-md border-2 border-foreground shadow-brutal-lg max-w-md w-full p-8 text-center">
+          <div className="w-16 h-16 bg-destructive border-2 border-foreground rounded-md flex items-center justify-center mx-auto mb-4 shadow-brutal-sm">
+            <AlertCircle className="w-8 h-8 text-destructive-foreground" />
+          </div>
+          <h1 className="text-xl font-black mb-2">Receipt Not Found</h1>
+          <p className="text-muted-foreground font-medium">{error || "This payment does not exist."}</p>
         </div>
       </div>
     );
@@ -99,20 +101,20 @@ export default function ReceiptPage() {
   const statusConfig = {
     confirmed: {
       icon: CheckCircle2,
-      color: "text-green-600",
-      bg: "bg-green-50",
+      color: "text-emerald-700",
+      bg: "bg-emerald-300",
       label: "Confirmed",
     },
     pending: {
       icon: Clock,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
+      color: "text-amber-700",
+      bg: "bg-amber-300",
       label: "Pending",
     },
     expired: {
       icon: AlertCircle,
-      color: "text-red-600",
-      bg: "bg-red-50",
+      color: "text-red-700",
+      bg: "bg-red-300",
       label: "Expired",
     },
   };
@@ -121,67 +123,65 @@ export default function ReceiptPage() {
   const StatusIcon = status.icon;
 
   return (
-    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4 print:bg-white print:p-0">
-      <div className="bg-card rounded-2xl shadow-xl max-w-lg w-full overflow-hidden print:shadow-none print:rounded-none">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 print:bg-white print:p-0">
+      <div className="bg-card rounded-md border-2 border-foreground shadow-brutal-lg max-w-lg w-full overflow-hidden print:shadow-none print:rounded-none print:border-0">
         {/* Header */}
-        <div className="bg-gradient-to-r from-primary to-primary/80 p-6 text-white print:bg-primary">
+        <div className="bg-primary border-b-2 border-foreground p-6 print:border-b">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5" />
-              </div>
-              <span className="font-bold text-lg">KasPay</span>
+              <KasPayLogo size="sm" className="bg-card border-foreground" />
+              <span className="font-black text-lg text-primary-foreground">KasPay</span>
             </div>
-            <span className="text-sm opacity-80">Payment Receipt</span>
+            <span className="text-sm font-bold text-primary-foreground/70">Payment Receipt</span>
           </div>
         </div>
 
         <div className="p-6">
           {/* Status Badge */}
           <div className="flex justify-center mb-6">
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${status.bg} ${status.color}`}>
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-md border-2 border-foreground ${status.bg} ${status.color} shadow-brutal-sm`}>
               <StatusIcon className="w-5 h-5" />
-              <span className="font-semibold">{status.label}</span>
+              <span className="font-black">{status.label}</span>
             </div>
           </div>
 
           {/* Amount */}
           <div className="text-center mb-6">
-            <div className="text-3xl font-bold mb-1">
+            <div className="text-3xl font-black mb-1">
               {formatKAS(receipt.amountReceived || receipt.amountExpected)} KAS
             </div>
             {usdAmount > 0 && (
-              <p className="text-muted-foreground">
-                ≈ ${usdAmount.toFixed(2)} USD
+              <p className="text-muted-foreground font-bold">
+                ~ ${usdAmount.toFixed(2)} USD
               </p>
             )}
           </div>
 
           {/* Details */}
-          <div className="space-y-3 border-t pt-4">
+          <div className="space-y-3 border-t-2 border-foreground pt-4">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Item</span>
-              <span className="text-sm font-medium">{receipt.title}</span>
+              <span className="text-sm text-muted-foreground font-bold">Item</span>
+              <span className="text-sm font-bold">{receipt.title}</span>
             </div>
             {receipt.description && (
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Description</span>
-                <span className="text-sm">{receipt.description}</span>
+                <span className="text-sm text-muted-foreground font-bold">Description</span>
+                <span className="text-sm font-medium">{receipt.description}</span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Payment ID</span>
-              <span className="text-sm font-mono">{receipt.id.slice(0, 8)}...</span>
+              <span className="text-sm text-muted-foreground font-bold">Payment ID</span>
+              <span className="text-sm font-mono font-medium">{receipt.id.slice(0, 8)}...</span>
             </div>
             {receipt.customerEmail && (
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Customer</span>
-                <span className="text-sm">{receipt.customerEmail}</span>
+                <span className="text-sm text-muted-foreground font-bold">Customer</span>
+                <span className="text-sm font-medium">{receipt.customerEmail}</span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Date</span>
-              <span className="text-sm">
+              <span className="text-sm text-muted-foreground font-bold">Date</span>
+              <span className="text-sm font-medium">
                 {formatDate(receipt.confirmedAt || receipt.createdAt)}
               </span>
             </div>
@@ -189,18 +189,18 @@ export default function ReceiptPage() {
 
           {/* Transaction ID */}
           {receipt.txId && (
-            <div className="mt-4 border-t pt-4">
+            <div className="mt-4 border-t-2 border-foreground pt-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">Transaction ID</span>
-                <button onClick={copyTxId} className="text-muted-foreground hover:text-foreground">
+                <span className="text-sm text-muted-foreground font-bold">Transaction ID</span>
+                <button onClick={copyTxId} className="text-muted-foreground hover:text-foreground transition-colors">
                   {copied ? (
-                    <CheckCheck className="w-4 h-4 text-green-600" />
+                    <CheckCheck className="w-4 h-4 text-emerald-600" />
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
                 </button>
               </div>
-              <p className="text-xs font-mono break-all bg-muted/50 p-2 rounded">
+              <p className="text-xs font-mono break-all bg-muted border-2 border-foreground p-2 rounded-md font-medium shadow-brutal-sm">
                 {receipt.txId}
               </p>
             </div>
@@ -232,11 +232,11 @@ export default function ReceiptPage() {
         </div>
 
         {/* Footer */}
-        <div className="border-t px-6 py-4">
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Zap className="w-3 h-3" />
+        <div className="border-t-2 border-foreground px-6 py-4">
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground font-bold">
+            <KasPayLogo size="sm" className="w-4 h-4 shadow-none border" />
             Powered by{" "}
-            <span className="font-semibold text-primary">KasPay</span>
+            <span className="font-black text-primary">KasPay</span>
           </div>
         </div>
       </div>

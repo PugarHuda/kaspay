@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { KasPayLogo, KasPayWordmark } from "@/components/ui/logo";
 
 const features = [
   {
@@ -66,12 +67,7 @@ export default function LandingPage() {
       <nav className="border-b-2 border-foreground bg-card sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-primary border-2 border-foreground rounded-md flex items-center justify-center shadow-brutal-sm">
-                <Zap className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-black tracking-tight">KasPay</span>
-            </div>
+            <KasPayWordmark size="md" />
             <div className="flex items-center gap-3">
               <Link href="/docs">
                 <Button variant="ghost" size="sm">API Docs</Button>
@@ -101,7 +97,7 @@ export default function LandingPage() {
             className="text-center max-w-3xl mx-auto"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary border-2 border-foreground text-primary-foreground text-sm font-bold mb-8 shadow-brutal-sm">
-              <Zap className="w-4 h-4" />
+              <KasPayLogo size="sm" className="border-primary-foreground/30" />
               Built for Kaspa Blockchain
             </div>
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-6 leading-[1.1]">
@@ -123,7 +119,7 @@ export default function LandingPage() {
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link href="/pay/demo">
+              <Link href="/demo">
                 <Button size="lg" variant="outline" className="text-lg px-8">
                   Try Demo Payment
                 </Button>
@@ -263,12 +259,7 @@ export default function LandingPage() {
       <footer className="border-t-2 border-foreground py-8 bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-primary border-2 border-foreground rounded-sm flex items-center justify-center">
-                <Zap className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-black">KasPay</span>
-            </div>
+            <KasPayWordmark size="sm" />
             <p className="text-sm text-muted-foreground font-medium">
               Built for Kaspathon 2026. Open source payment gateway for Kaspa.
             </p>

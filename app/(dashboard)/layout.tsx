@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Zap,
   LayoutDashboard,
   CreditCard,
   Link2,
@@ -16,6 +15,7 @@ import {
 import { useAuth } from "@/lib/auth/context";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { KasPayLogo, KasPayWordmark } from "@/components/ui/logo";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -55,11 +55,8 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside className="fixed left-0 top-0 h-full w-64 bg-card border-r-2 border-foreground z-40 hidden lg:block">
         <div className="p-6">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-primary border-2 border-foreground rounded-md flex items-center justify-center shadow-brutal-sm">
-              <Zap className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-black tracking-tight">KasPay</span>
+          <Link href="/dashboard">
+            <KasPayWordmark size="md" />
           </Link>
         </div>
 
@@ -106,11 +103,8 @@ export default function DashboardLayout({
 
       {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-40 bg-card border-b-2 border-foreground px-4 h-14 flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-primary border-2 border-foreground rounded-md flex items-center justify-center">
-            <Zap className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <span className="font-black">KasPay</span>
+        <Link href="/dashboard">
+          <KasPayWordmark size="sm" />
         </Link>
         <div className="flex items-center gap-1">
           {navItems.map((item) => (

@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Zap, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth/context";
+import { KasPayWordmark } from "@/components/ui/logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,11 +36,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-primary border-2 border-foreground rounded-md flex items-center justify-center shadow-brutal-sm">
-              <Zap className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-black">KasPay</span>
+          <Link href="/" className="inline-flex mb-6">
+            <KasPayWordmark size="lg" />
           </Link>
           <h1 className="text-2xl font-black">Welcome back</h1>
           <p className="text-muted-foreground mt-2 font-medium">

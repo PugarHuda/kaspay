@@ -8,13 +8,14 @@ import {
   CheckCircle2,
   Copy,
   Loader2,
-  Zap,
   Clock,
   AlertCircle,
   ExternalLink,
   Receipt,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { KasPayLogo } from "@/components/ui/logo";
 import { formatKAS, cleanAmount } from "@/lib/utils";
 
 interface PaymentData {
@@ -205,9 +206,7 @@ export default function PaymentPage() {
         {/* Header */}
         <div className="bg-primary border-b-2 border-foreground p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-card border-2 border-foreground rounded-md flex items-center justify-center shadow-brutal-sm">
-              <Zap className="w-5 h-5 text-primary" />
-            </div>
+            <KasPayLogo size="sm" className="bg-card border-foreground" />
             <span className="font-black text-primary-foreground">KasPay</span>
           </div>
           <h1 className="text-lg font-black text-primary-foreground">
@@ -399,6 +398,7 @@ export default function PaymentPage() {
                   </Button>
                 </a>
 
+
                 {/* Timer & Status */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 px-3 py-2 bg-secondary border-2 border-foreground rounded-md shadow-brutal-sm">
@@ -422,7 +422,7 @@ export default function PaymentPage() {
         {/* Footer */}
         <div className="border-t-2 border-foreground px-6 py-4">
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground font-bold">
-            <Zap className="w-3 h-3" />
+            <KasPayLogo size="sm" className="w-4 h-4 shadow-none border" />
             Powered by{" "}
             <span className="font-black text-primary">KasPay</span>
           </div>
