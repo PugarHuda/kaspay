@@ -10,10 +10,13 @@ import {
   Code2,
   Globe,
   CreditCard,
+  Menu,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { KasPayLogo, KasPayWordmark } from "@/components/ui/logo";
+import { useState } from "react";
 
 const features = [
   {
@@ -61,6 +64,8 @@ const features = [
 ];
 
 export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
@@ -68,7 +73,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <KasPayWordmark size="md" />
-            <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-3">
+              <Link href="/demo">
+                <Button variant="ghost" size="sm">Demo</Button>
+              </Link>
               <Link href="/docs">
                 <Button variant="ghost" size="sm">API Docs</Button>
               </Link>
@@ -82,8 +90,36 @@ export default function LandingPage() {
               </Link>
               <ThemeToggle />
             </div>
+            <button
+              className="sm:hidden p-2 border-2 border-foreground rounded-md shadow-brutal-sm bg-card"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="sm:hidden border-t-2 border-foreground bg-card px-4 py-4 space-y-2">
+            <Link href="/demo" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start">Demo</Button>
+            </Link>
+            <Link href="/docs" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start">API Docs</Button>
+            </Link>
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="outline" className="w-full justify-start">Sign In</Button>
+            </Link>
+            <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
+              <Button className="w-full">
+                Get Started <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </Link>
+            <div className="flex justify-end pt-2">
+              <ThemeToggle />
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero */}
@@ -256,12 +292,35 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t-2 border-foreground py-8 bg-card">
+      <footer className="border-t-2 border-foreground py-10 bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <KasPayWordmark size="sm" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
+            <div>
+              <KasPayWordmark size="sm" />
+              <p className="text-sm text-muted-foreground font-medium mt-2">
+                Open source payment gateway for Kaspa blockchain.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-black text-sm mb-3">Product</h4>
+              <div className="space-y-2">
+                <Link href="/demo" className="block text-sm text-muted-foreground hover:text-foreground font-medium transition-colors">Interactive Demo</Link>
+                <Link href="/docs" className="block text-sm text-muted-foreground hover:text-foreground font-medium transition-colors">API Documentation</Link>
+                <Link href="/register" className="block text-sm text-muted-foreground hover:text-foreground font-medium transition-colors">Create Account</Link>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-black text-sm mb-3">Kaspa Ecosystem</h4>
+              <div className="space-y-2">
+                <a href="https://kaspa.org" target="_blank" rel="noopener noreferrer" className="block text-sm text-muted-foreground hover:text-foreground font-medium transition-colors">Kaspa.org</a>
+                <a href="https://explorer-tn10.kaspa.org" target="_blank" rel="noopener noreferrer" className="block text-sm text-muted-foreground hover:text-foreground font-medium transition-colors">Kaspa Explorer</a>
+                <a href="https://faucet-tn10.kaspanet.io" target="_blank" rel="noopener noreferrer" className="block text-sm text-muted-foreground hover:text-foreground font-medium transition-colors">Testnet Faucet</a>
+              </div>
+            </div>
+          </div>
+          <div className="border-t-2 border-foreground/20 pt-6 text-center">
             <p className="text-sm text-muted-foreground font-medium">
-              Built for Kaspathon 2026. Open source payment gateway for Kaspa.
+              Built for Kaspathon 2026. Near-zero fees, instant confirmations.
             </p>
           </div>
         </div>

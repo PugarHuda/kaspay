@@ -37,6 +37,8 @@ export const paymentLinks = pgTable("payment_links", {
   expiryMinutes: integer("expiry_minutes").notNull().default(30),
   status: varchar("status", { length: 20 }).notNull().default("active"),
   slug: varchar("slug", { length: 100 }).notNull().unique(),
+  customerName: varchar("customer_name", { length: 255 }),
+  customerEmail: varchar("customer_email", { length: 255 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   expiresAt: timestamp("expires_at"),
 });
@@ -54,6 +56,7 @@ export const payments = pgTable("payments", {
   }).notNull(),
   initialBalance: decimal("initial_balance", { precision: 20, scale: 8 }).notNull().default("0"),
   amountReceived: decimal("amount_received", { precision: 20, scale: 8 }),
+  senderAddress: varchar("sender_address", { length: 100 }),
   txId: varchar("tx_id", { length: 100 }),
   blockHash: varchar("block_hash", { length: 100 }),
   confirmations: integer("confirmations").notNull().default(0),

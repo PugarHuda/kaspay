@@ -6,7 +6,11 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 const updateSettingsSchema = z.object({
-  paymentExpiry: z.number().int().min(5).max(1440),
+  paymentExpiry: z.number().int().min(5).max(1440).optional(),
+  kaspaAddress: z.string().min(40).refine(
+    (addr) => addr.startsWith("kaspa:") || addr.startsWith("kaspatest:"),
+    { message: "Must be a valid Kaspa address (kaspa: or kaspatest:)" }
+  ).optional(),
 });
 
 export async function PATCH(req: NextRequest) {
@@ -18,16 +22,21 @@ export async function PATCH(req: NextRequest) {
 
     const payload = verifyToken(token);
     const body = await req.json();
-    const { paymentExpiry } = updateSettingsSchema.parse(body);
+    const data = updateSettingsSchema.parse(body);
+
+    const updateFields: Record<string, any> = { updatedAt: new Date() };
+    if (data.paymentExpiry !== undefined) updateFields.paymentExpiry = data.paymentExpiry;
+    if (data.kaspaAddress !== undefined) updateFields.kaspaAddress = data.kaspaAddress;
 
     const [updated] = await db
       .update(users)
-      .set({ paymentExpiry, updatedAt: new Date() })
+      .set(updateFields)
       .where(eq(users.id, payload.userId))
       .returning();
 
     return NextResponse.json({
       paymentExpiry: updated.paymentExpiry,
+      kaspaAddress: updated.kaspaAddress,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

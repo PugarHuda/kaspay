@@ -58,6 +58,12 @@ export async function PATCH(
         ...(body.description !== undefined && { description: body.description }),
         ...(body.status && { status: body.status }),
         ...(body.redirectUrl !== undefined && { redirectUrl: body.redirectUrl }),
+        ...(body.amount !== undefined && { amount: body.amount.toString() }),
+        ...(body.currency && { currency: body.currency }),
+        ...(body.successMessage !== undefined && { successMessage: body.successMessage }),
+        ...(body.expiryMinutes !== undefined && { expiryMinutes: body.expiryMinutes }),
+        ...(body.customerName !== undefined && { customerName: body.customerName || null }),
+        ...(body.customerEmail !== undefined && { customerEmail: body.customerEmail || null }),
       })
       .where(
         and(

@@ -22,7 +22,9 @@ interface ReceiptData {
   amountExpected: string;
   amountReceived: string | null;
   kaspaAddress: string;
+  senderAddress: string | null;
   txId: string | null;
+  customerName: string | null;
   customerEmail: string | null;
   confirmedAt: string | null;
   createdAt: string;
@@ -173,10 +175,17 @@ export default function ReceiptPage() {
               <span className="text-sm text-muted-foreground font-bold">Payment ID</span>
               <span className="text-sm font-mono font-medium">{receipt.id.slice(0, 8)}...</span>
             </div>
-            {receipt.customerEmail && (
+            {(receipt.customerName || receipt.customerEmail) && (
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground font-bold">Customer</span>
-                <span className="text-sm font-medium">{receipt.customerEmail}</span>
+                <div className="text-right">
+                  {receipt.customerName && (
+                    <span className="text-sm font-bold block">{receipt.customerName}</span>
+                  )}
+                  {receipt.customerEmail && (
+                    <span className="text-sm text-muted-foreground font-medium block">{receipt.customerEmail}</span>
+                  )}
+                </div>
               </div>
             )}
             <div className="flex justify-between">
@@ -184,6 +193,24 @@ export default function ReceiptPage() {
               <span className="text-sm font-medium">
                 {formatDate(receipt.confirmedAt || receipt.createdAt)}
               </span>
+            </div>
+          </div>
+
+          {/* Addresses */}
+          <div className="space-y-3 border-t-2 border-foreground pt-4 mt-4">
+            {receipt.senderAddress && (
+              <div>
+                <span className="text-sm text-muted-foreground font-bold block mb-1">From (Sender)</span>
+                <div className="text-xs font-mono break-all bg-muted border-2 border-foreground p-2 rounded-md font-medium shadow-brutal-sm">
+                  {receipt.senderAddress}
+                </div>
+              </div>
+            )}
+            <div>
+              <span className="text-sm text-muted-foreground font-bold block mb-1">To (Receiver)</span>
+              <div className="text-xs font-mono break-all bg-muted border-2 border-foreground p-2 rounded-md font-medium shadow-brutal-sm">
+                {receipt.kaspaAddress}
+              </div>
             </div>
           </div>
 

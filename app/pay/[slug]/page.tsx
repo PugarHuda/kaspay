@@ -324,9 +324,16 @@ export default function PaymentPage() {
               <motion.div key="pending" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 {/* Testnet notice */}
                 {payment.kaspaAddress.startsWith("kaspatest:") && (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-secondary border-2 border-foreground rounded-md mb-4 text-xs font-bold shadow-brutal-sm">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>Testnet - make sure your wallet is set to <strong>Testnet-10</strong></span>
+                  <div className="px-3 py-2 bg-secondary border-2 border-foreground rounded-md mb-4 shadow-brutal-sm">
+                    <div className="flex items-center gap-2 text-xs font-bold">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>Testnet - use <strong>Testnet-10</strong> wallet</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed font-medium">
+                      Use <a href="https://github.com/aspectron/kaspa-ng/releases" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Kaspa-NG</a> or{" "}
+                      <a href="https://faucet-tn10.kaspanet.io" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">get testnet coins</a>.
+                      If Kaspium shows gRPC error, try a different TN10 node.
+                    </p>
                   </div>
                 )}
 

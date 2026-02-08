@@ -35,10 +35,10 @@ class KaspaAPI {
     return data || [];
   }
 
-  // Get transaction by ID
+  // Get transaction by ID (with resolved input addresses)
   async getTransaction(txId: string): Promise<any> {
     const response = await fetch(
-      `${this.baseUrl}/transactions/${txId}`,
+      `${this.baseUrl}/transactions/${txId}?inputs=true&resolve_previous_outpoints=light`,
       { cache: "no-store" }
     );
     if (!response.ok) {

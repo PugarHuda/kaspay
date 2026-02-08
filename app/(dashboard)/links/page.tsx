@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/lib/auth/context";
 import {
   Card,
@@ -24,6 +24,9 @@ import {
   Clock,
   FileEdit,
   Send,
+  Pencil,
+  User,
+  Zap,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { formatKAS, formatDate } from "@/lib/utils";
@@ -39,6 +42,10 @@ interface PaymentLink {
   status: string;
   createdAt: string;
   expiresAt: string | null;
+  customerName: string | null;
+  customerEmail: string | null;
+  successMessage: string | null;
+  redirectUrl: string | null;
 }
 
 function getEffectiveStatus(link: PaymentLink): "active" | "draft" | "expired" | "inactive" {
@@ -75,14 +82,18 @@ const STATUS_BADGE_MAP = {
 
 const STATUS_FILTERS = ["all", "active", "draft", "expired"] as const;
 
+type EmbedStyle = "button" | "card" | "minimal";
+
 export default function LinksPage() {
   const { token } = useAuth();
   const [links, setLinks] = useState<PaymentLink[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
-  const [creating, setCreating] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingLink, setEditingLink] = useState<PaymentLink | null>(null);
+  const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [embedSlug, setEmbedSlug] = useState<string | null>(null);
+  const [embedStyle, setEmbedStyle] = useState<EmbedStyle>("button");
   const [publishing, setPublishing] = useState<string | null>(null);
 
   // Form state
@@ -93,7 +104,9 @@ export default function LinksPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [redirectUrl, setRedirectUrl] = useState("");
   const [expiryMinutes, setExpiryMinutes] = useState(30);
-  const [linkExpiresIn, setLinkExpiresIn] = useState(0); // 0 = never
+  const [linkExpiresIn, setLinkExpiresIn] = useState(0);
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [qrSlug, setQrSlug] = useState<string | null>(null);
   const [searchLinks, setSearchLinks] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -118,7 +131,9 @@ export default function LinksPage() {
         return (
           l.title.toLowerCase().includes(q) ||
           (l.description || "").toLowerCase().includes(q) ||
-          l.slug.toLowerCase().includes(q)
+          l.slug.toLowerCase().includes(q) ||
+          (l.customerName || "").toLowerCase().includes(q) ||
+          (l.customerEmail || "").toLowerCase().includes(q)
         );
       }
       return true;
@@ -144,40 +159,87 @@ export default function LinksPage() {
     }
   }
 
-  async function createLink(e: React.FormEvent, asDraft: boolean = false) {
+  function openCreateForm() {
+    resetForm();
+    setEditingLink(null);
+    setShowForm(true);
+  }
+
+  function openEditForm(link: PaymentLink) {
+    setTitle(link.title);
+    setDescription(link.description || "");
+    setAmount(parseFloat(link.amount).toString());
+    setCurrency(link.currency as "KAS" | "USD");
+    setSuccessMessage(link.successMessage || "");
+    setRedirectUrl(link.redirectUrl || "");
+    setExpiryMinutes(link.expiryMinutes);
+    setLinkExpiresIn(0);
+    setCustomerName(link.customerName || "");
+    setCustomerEmail(link.customerEmail || "");
+    setEditingLink(link);
+    setShowForm(true);
+  }
+
+  async function handleSubmit(e: React.FormEvent, asDraft: boolean = false) {
     e.preventDefault();
     if (!token) return;
-    setCreating(true);
+    setSaving(true);
 
     try {
-      const res = await fetch("/api/links", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title,
-          description: description || undefined,
-          amount: parseFloat(amount),
-          currency,
-          successMessage: successMessage || undefined,
-          redirectUrl: redirectUrl || undefined,
-          expiryMinutes,
-          status: asDraft ? "draft" : "active",
-          linkExpiresIn: linkExpiresIn > 0 ? linkExpiresIn : undefined,
-        }),
-      });
+      if (editingLink) {
+        // Update existing draft
+        const res = await fetch(`/api/links/${editingLink.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title,
+            description: description || "",
+            amount: parseFloat(amount),
+            currency,
+            successMessage: successMessage || "",
+            redirectUrl: redirectUrl || "",
+            expiryMinutes,
+            customerName: customerName || "",
+            customerEmail: customerEmail || "",
+            status: asDraft ? "draft" : "active",
+          }),
+        });
+        if (!res.ok) throw new Error("Failed to update link");
+      } else {
+        // Create new
+        const res = await fetch("/api/links", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title,
+            description: description || undefined,
+            amount: parseFloat(amount),
+            currency,
+            successMessage: successMessage || undefined,
+            redirectUrl: redirectUrl || undefined,
+            expiryMinutes,
+            status: asDraft ? "draft" : "active",
+            linkExpiresIn: linkExpiresIn > 0 ? linkExpiresIn : undefined,
+            customerName: customerName || undefined,
+            customerEmail: customerEmail || undefined,
+          }),
+        });
+        if (!res.ok) throw new Error("Failed to create link");
+      }
 
-      if (!res.ok) throw new Error("Failed to create link");
-
-      setShowCreate(false);
+      setShowForm(false);
       resetForm();
       fetchLinks();
     } catch (err) {
-      console.error("Failed to create link:", err);
+      console.error("Failed to save link:", err);
     } finally {
-      setCreating(false);
+      setSaving(false);
     }
   }
 
@@ -190,6 +252,9 @@ export default function LinksPage() {
     setRedirectUrl("");
     setExpiryMinutes(30);
     setLinkExpiresIn(0);
+    setCustomerName("");
+    setCustomerEmail("");
+    setEditingLink(null);
   }
 
   async function publishLink(linkId: string) {
@@ -204,9 +269,7 @@ export default function LinksPage() {
         },
         body: JSON.stringify({ status: "active" }),
       });
-      if (res.ok) {
-        fetchLinks();
-      }
+      if (res.ok) fetchLinks();
     } catch (err) {
       console.error("Failed to publish link:", err);
     } finally {
@@ -219,6 +282,44 @@ export default function LinksPage() {
     navigator.clipboard.writeText(url);
     setCopied(slug);
     setTimeout(() => setCopied(null), 2000);
+  }
+
+  function getEmbedCode(slug: string, style: EmbedStyle): string {
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/pay/${slug}`;
+    if (style === "card") {
+      return `<!-- KasPay Payment Card -->
+<div style="display:inline-block;border:2px solid #1a1a2e;border-radius:12px;overflow:hidden;font-family:system-ui,sans-serif;max-width:320px;box-shadow:4px 4px 0 #1a1a2e;">
+  <div style="background:#49EACB;padding:16px 20px;border-bottom:2px solid #1a1a2e;">
+    <div style="font-weight:800;color:#1a1a2e;font-size:14px;">Pay with Kaspa</div>
+  </div>
+  <div style="padding:20px;background:#fff;">
+    <p style="margin:0 0 16px;color:#555;font-size:14px;">Fast, secure crypto payment</p>
+    <a href="${url}" target="_blank" rel="noopener"
+       style="display:block;text-align:center;padding:12px;background:#49EACB;color:#1a1a2e;
+              border-radius:8px;font-weight:700;font-size:15px;text-decoration:none;
+              border:2px solid #1a1a2e;">
+      Pay Now
+    </a>
+  </div>
+</div>`;
+    }
+    if (style === "minimal") {
+      return `<!-- KasPay Payment Link -->
+<a href="${url}" target="_blank" rel="noopener"
+   style="color:#49EACB;font-weight:600;font-size:15px;text-decoration:underline;font-family:system-ui,sans-serif;">
+  Pay with Kaspa &rarr;
+</a>`;
+    }
+    // default: button
+    return `<!-- KasPay Payment Button -->
+<a href="${url}" target="_blank" rel="noopener"
+   style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;
+          background:#49EACB;color:#1a1a2e;border-radius:8px;font-weight:700;
+          font-size:15px;text-decoration:none;font-family:system-ui,sans-serif;
+          border:2px solid #1a1a2e;box-shadow:3px 3px 0 #1a1a2e;
+          transition:all 0.15s ease;">
+  &#9889; Pay with Kaspa
+</a>`;
   }
 
   if (loading) {
@@ -238,27 +339,29 @@ export default function LinksPage() {
             Create and manage your payment links
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
+        <Button onClick={openCreateForm}>
           <Plus className="w-4 h-4 mr-2" />
           Create Link
         </Button>
       </div>
 
-      {/* Create Modal */}
-      {showCreate && (
+      {/* Create / Edit Modal */}
+      {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-md border-2 border-foreground shadow-brutal-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black">Create Payment Link</h2>
+              <h2 className="text-xl font-black">
+                {editingLink ? "Edit Draft" : "Create Payment Link"}
+              </h2>
               <button
-                onClick={() => setShowCreate(false)}
+                onClick={() => { setShowForm(false); resetForm(); }}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={(e) => createLink(e, false)} className="space-y-4">
+            <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
               <div>
                 <label className="text-sm font-bold mb-2 block">Title</label>
                 <Input
@@ -278,6 +381,27 @@ export default function LinksPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
+              </div>
+
+              {/* Customer info */}
+              <div className="border-2 border-foreground/20 rounded-md p-3 space-y-3">
+                <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                  <User className="w-3.5 h-3.5" />
+                  Customer (optional)
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    placeholder="Customer name"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                  />
+                  <Input
+                    placeholder="customer@email.com"
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                  />
+                </div>
               </div>
 
               <div>
@@ -386,54 +510,56 @@ export default function LinksPage() {
                 </p>
               </div>
 
-              <div>
-                <label className="text-sm font-bold mb-2 block">
-                  Link Expiration
-                </label>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {[
-                    { value: 0, label: "Never" },
-                    { value: 1440, label: "1 day" },
-                    { value: 10080, label: "7 days" },
-                    { value: 43200, label: "30 days" },
-                    { value: 131400, label: "3 mo" },
-                  ].map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setLinkExpiresIn(opt.value)}
-                      className={`py-1.5 px-2 rounded-md border-2 text-xs font-bold transition-all ${
-                        linkExpiresIn === opt.value
-                          ? "bg-primary text-white border-primary"
-                          : "bg-card text-foreground border-input hover:bg-muted"
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+              {!editingLink && (
+                <div>
+                  <label className="text-sm font-bold mb-2 block">
+                    Link Expiration
+                  </label>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {[
+                      { value: 0, label: "Never" },
+                      { value: 1440, label: "1 day" },
+                      { value: 10080, label: "7 days" },
+                      { value: 43200, label: "30 days" },
+                      { value: 131400, label: "3 mo" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setLinkExpiresIn(opt.value)}
+                        className={`py-1.5 px-2 rounded-md border-2 text-xs font-bold transition-all ${
+                          linkExpiresIn === opt.value
+                            ? "bg-primary text-white border-primary"
+                            : "bg-card text-foreground border-input hover:bg-muted"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    When this link stops accepting payments
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  When this link stops accepting payments
-                </p>
-              </div>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={(e) => createLink(e as any, true)}
+                  onClick={(e) => handleSubmit(e as any, true)}
                   className="flex-1"
-                  disabled={creating || !title || !amount}
+                  disabled={saving || !title || !amount}
                 >
-                  {creating ? (
+                  {saving ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   ) : (
                     <FileEdit className="w-4 h-4 mr-2" />
                   )}
-                  Save Draft
+                  {editingLink ? "Save Draft" : "Save Draft"}
                 </Button>
-                <Button type="submit" className="flex-1" disabled={creating || !title || !amount}>
-                  {creating ? (
+                <Button type="submit" className="flex-1" disabled={saving || !title || !amount}>
+                  {saving ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   ) : (
                     <Send className="w-4 h-4 mr-2" />
@@ -452,7 +578,7 @@ export default function LinksPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search by title, description..."
+              placeholder="Search by title, customer, description..."
               value={searchLinks}
               onChange={(e) => setSearchLinks(e.target.value)}
               className="pl-9"
@@ -483,7 +609,7 @@ export default function LinksPage() {
             <p className="text-muted-foreground mb-4">
               No payment links yet. Create your first one!
             </p>
-            <Button onClick={() => setShowCreate(true)}>
+            <Button onClick={openCreateForm}>
               <Plus className="w-4 h-4 mr-2" />
               Create Payment Link
             </Button>
@@ -517,11 +643,19 @@ export default function LinksPage() {
                   )}
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-black mb-3">
+                  <div className="text-2xl font-black mb-2">
                     {link.currency === "USD"
                       ? `$${parseFloat(link.amount).toFixed(2)} USD`
                       : `${formatKAS(link.amount)} KAS`}
                   </div>
+
+                  {/* Customer info */}
+                  {(link.customerName || link.customerEmail) && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3 font-medium">
+                      <User className="w-3 h-3" />
+                      {link.customerName}{link.customerName && link.customerEmail ? " - " : ""}{link.customerEmail}
+                    </div>
+                  )}
 
                   {/* Link expiration countdown */}
                   {link.expiresAt && (
@@ -537,21 +671,32 @@ export default function LinksPage() {
                     </div>
                   )}
 
-                  {/* Draft publish button */}
+                  {/* Draft actions: Edit + Publish */}
                   {effective === "draft" && (
-                    <Button
-                      size="sm"
-                      className="w-full mb-3"
-                      onClick={() => publishLink(link.id)}
-                      disabled={publishing === link.id}
-                    >
-                      {publishing === link.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      ) : (
-                        <Send className="w-4 h-4 mr-2" />
-                      )}
-                      Publish Link
-                    </Button>
+                    <div className="flex gap-2 mb-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => openEditForm(link)}
+                      >
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => publishLink(link.id)}
+                        disabled={publishing === link.id}
+                      >
+                        {publishing === link.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                          <Send className="w-4 h-4 mr-2" />
+                        )}
+                        Publish
+                      </Button>
+                    </div>
                   )}
 
                   <div className="flex gap-2">
@@ -572,7 +717,7 @@ export default function LinksPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEmbedSlug(link.slug)}
+                      onClick={() => { setEmbedSlug(link.slug); setEmbedStyle("button"); }}
                       title="Embed code"
                       disabled={effective === "draft"}
                     >
@@ -684,12 +829,12 @@ export default function LinksPage() {
         </div>
       )}
 
-      {/* Embed Code Modal */}
+      {/* Embed Code Modal - Revamped */}
       {embedSlug && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-md border-2 border-foreground shadow-brutal-lg max-w-lg w-full p-6">
+          <div className="bg-card rounded-md border-2 border-foreground shadow-brutal-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-black">Embed Payment Button</h2>
+              <h2 className="text-xl font-black">Embed Payment</h2>
               <button
                 onClick={() => setEmbedSlug(null)}
                 className="text-muted-foreground hover:text-foreground"
@@ -698,20 +843,117 @@ export default function LinksPage() {
               </button>
             </div>
 
-            <p className="text-sm text-muted-foreground mb-4">
-              Copy this HTML to add a &quot;Pay with Kaspa&quot; button to your website:
+            <p className="text-sm text-muted-foreground mb-4 font-medium">
+              Choose a style and copy the HTML to your website.
             </p>
 
-            <pre className="bg-muted p-4 rounded-md border-2 border-foreground text-xs font-mono shadow-brutal-sm overflow-x-auto whitespace-pre-wrap mb-4">
-{`<!-- KasPay Payment Button -->
-<a href="${typeof window !== "undefined" ? window.location.origin : ""}/pay/${embedSlug}"
-   target="_blank"
-   style="display:inline-flex;align-items:center;gap:8px;
-          padding:12px 24px;background:#49EACB;color:#1a1a2e;
-          border-radius:8px;font-weight:600;font-size:16px;
-          text-decoration:none;font-family:sans-serif;">
-  ⚡ Pay with Kaspa
-</a>`}
+            {/* Style selector */}
+            <div className="flex gap-2 mb-4">
+              {([
+                { value: "button" as EmbedStyle, label: "Button", icon: Zap },
+                { value: "card" as EmbedStyle, label: "Card", icon: Code2 },
+                { value: "minimal" as EmbedStyle, label: "Text Link", icon: ExternalLink },
+              ]).map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setEmbedStyle(opt.value)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md border-2 text-xs font-bold transition-all ${
+                    embedStyle === opt.value
+                      ? "bg-primary text-primary-foreground border-foreground shadow-brutal-sm"
+                      : "bg-card text-foreground border-foreground/30 hover:border-foreground hover:shadow-brutal-sm"
+                  }`}
+                >
+                  <opt.icon className="w-3.5 h-3.5" />
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Preview */}
+            <div className="mb-4 p-5 bg-muted border-2 border-foreground rounded-md shadow-brutal-sm">
+              <p className="text-xs text-muted-foreground font-bold mb-3 uppercase">Preview</p>
+              <div className="flex justify-center">
+                {embedStyle === "button" && (
+                  <a
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "12px 28px",
+                      background: "#49EACB",
+                      color: "#1a1a2e",
+                      borderRadius: "8px",
+                      fontWeight: 700,
+                      fontSize: "15px",
+                      textDecoration: "none",
+                      fontFamily: "system-ui, sans-serif",
+                      border: "2px solid #1a1a2e",
+                      boxShadow: "3px 3px 0 #1a1a2e",
+                    }}
+                  >
+                    &#9889; Pay with Kaspa
+                  </a>
+                )}
+                {embedStyle === "card" && (
+                  <div style={{
+                    display: "inline-block",
+                    border: "2px solid #1a1a2e",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    fontFamily: "system-ui, sans-serif",
+                    maxWidth: "280px",
+                    width: "100%",
+                    boxShadow: "4px 4px 0 #1a1a2e",
+                  }}>
+                    <div style={{ background: "#49EACB", padding: "12px 16px", borderBottom: "2px solid #1a1a2e" }}>
+                      <div style={{ fontWeight: 800, color: "#1a1a2e", fontSize: "13px" }}>Pay with Kaspa</div>
+                    </div>
+                    <div style={{ padding: "16px", background: "#fff" }}>
+                      <p style={{ margin: "0 0 12px", color: "#555", fontSize: "13px" }}>Fast, secure crypto payment</p>
+                      <a
+                        href="#"
+                        onClick={(e) => e.preventDefault()}
+                        style={{
+                          display: "block",
+                          textAlign: "center" as const,
+                          padding: "10px",
+                          background: "#49EACB",
+                          color: "#1a1a2e",
+                          borderRadius: "8px",
+                          fontWeight: 700,
+                          fontSize: "14px",
+                          textDecoration: "none",
+                          border: "2px solid #1a1a2e",
+                        }}
+                      >
+                        Pay Now
+                      </a>
+                    </div>
+                  </div>
+                )}
+                {embedStyle === "minimal" && (
+                  <a
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    style={{
+                      color: "#49EACB",
+                      fontWeight: 600,
+                      fontSize: "15px",
+                      textDecoration: "underline",
+                      fontFamily: "system-ui, sans-serif",
+                    }}
+                  >
+                    Pay with Kaspa &rarr;
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Code */}
+            <pre className="bg-muted p-4 rounded-md border-2 border-foreground text-xs font-mono shadow-brutal-sm overflow-x-auto whitespace-pre-wrap mb-4 max-h-48 overflow-y-auto">
+              {getEmbedCode(embedSlug, embedStyle)}
             </pre>
 
             <div className="flex gap-3">
@@ -725,8 +967,7 @@ export default function LinksPage() {
               <Button
                 className="flex-1"
                 onClick={() => {
-                  const code = `<a href="${window.location.origin}/pay/${embedSlug}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#49EACB;color:#1a1a2e;border-radius:8px;font-weight:600;font-size:16px;text-decoration:none;font-family:sans-serif;">⚡ Pay with Kaspa</a>`;
-                  navigator.clipboard.writeText(code);
+                  navigator.clipboard.writeText(getEmbedCode(embedSlug, embedStyle));
                   setCopied("embed");
                   setTimeout(() => setCopied(null), 2000);
                 }}
@@ -738,28 +979,6 @@ export default function LinksPage() {
                 )}
                 {copied === "embed" ? "Copied!" : "Copy Code"}
               </Button>
-            </div>
-
-            <div className="mt-4 p-4 border rounded-lg">
-              <p className="text-xs text-muted-foreground mb-2">Preview:</p>
-              <a
-                href="#"
-                onClick={(e) => e.preventDefault()}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "12px 24px",
-                  background: "#49EACB",
-                  color: "#1a1a2e",
-                  borderRadius: "8px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  textDecoration: "none",
-                }}
-              >
-                ⚡ Pay with Kaspa
-              </a>
             </div>
           </div>
         </div>

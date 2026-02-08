@@ -45,40 +45,38 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check for the most recent payment for this link (any status)
+    // Check for pending payment for this link (reuse to avoid duplicates)
     const existingPayment = await db.query.payments.findFirst({
-      where: (payments, { eq }) => eq(payments.paymentLinkId, link.id),
+      where: (payments, { eq, and }) =>
+        and(
+          eq(payments.paymentLinkId, link.id),
+          eq(payments.status, "pending")
+        ),
       orderBy: (payments, { desc }) => [desc(payments.createdAt)],
     });
 
     if (existingPayment) {
-      let status = existingPayment.status;
-
-      // Mark as expired if time has passed
-      if (status === "pending" && existingPayment.expiresAt && new Date(existingPayment.expiresAt) < new Date()) {
-        status = "expired";
+      // Check if expired by time
+      if (existingPayment.expiresAt && new Date(existingPayment.expiresAt) < new Date()) {
         await db
           .update(payments)
           .set({ status: "expired" })
           .where(eq(payments.id, existingPayment.id));
-      }
-
-      // Return existing payment if still pending or already confirmed/expired
-      if (status === "pending" || status === "confirmed" || status === "expired") {
+        // Fall through to create a new payment
+      } else {
+        // Return existing pending payment (same customer refreshing)
         return NextResponse.json({
           id: existingPayment.id,
           kaspaAddress: existingPayment.kaspaAddress,
           amountExpected: existingPayment.amountExpected,
           expiresAt: existingPayment.expiresAt,
-          status,
+          status: "pending",
           title: link.title,
           description: link.description,
           currency: link.currency,
           originalUsdAmount: link.currency === "USD" ? link.amount : null,
           successMessage: link.successMessage,
           redirectUrl: link.redirectUrl,
-          txId: existingPayment.txId,
-          confirmedAt: existingPayment.confirmedAt,
         });
       }
     }
@@ -112,6 +110,10 @@ export async function POST(req: NextRequest) {
       amountInKas = kasAmount.toFixed(8);
     }
 
+    // Generate unique nonce (1-9999 sompi) to differentiate concurrent payments
+    const nonce = Math.floor(Math.random() * 9999) + 1;
+    const amountWithNonce = (parseFloat(amountInKas) + nonce / 1e8).toFixed(8);
+
     // Fetch current balance so we can detect new incoming funds
     let initialBalance = "0";
     try {
@@ -121,14 +123,14 @@ export async function POST(req: NextRequest) {
       // default to 0 if can't fetch
     }
 
-    // Create payment record - use merchant's address directly
+    // Create payment record with unique amount
     const [payment] = await db
       .insert(payments)
       .values({
         paymentLinkId: link.id,
         userId: link.userId,
         kaspaAddress: merchant.kaspaAddress,
-        amountExpected: amountInKas,
+        amountExpected: amountWithNonce,
         initialBalance,
         customerEmail,
         customerName,

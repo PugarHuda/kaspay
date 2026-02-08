@@ -11,7 +11,9 @@ interface WebhookPayload {
     amountExpected: string;
     amountReceived: string | null;
     kaspaAddress: string;
+    senderAddress: string | null;
     txId: string | null;
+    customerName: string | null;
     customerEmail: string | null;
     confirmedAt: string | null;
   };

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, CheckCircle2, Key, Wallet, Clock, Loader2 } from "lucide-react";
+import { Copy, CheckCircle2, Key, Wallet, Clock, Loader2, Save, Pencil } from "lucide-react";
 import { truncateAddress } from "@/lib/utils";
 
 const EXPIRY_OPTIONS = [
@@ -29,6 +29,11 @@ export default function SettingsPage() {
   const [expiry, setExpiry] = useState(user?.paymentExpiry || 30);
   const [savingExpiry, setSavingExpiry] = useState(false);
   const [expirySaved, setExpirySaved] = useState(false);
+  const [walletAddress, setWalletAddress] = useState(user?.kaspaAddress || "");
+  const [editingWallet, setEditingWallet] = useState(false);
+  const [savingWallet, setSavingWallet] = useState(false);
+  const [walletSaved, setWalletSaved] = useState(false);
+  const [walletError, setWalletError] = useState("");
 
   function copyToClipboard(text: string, type: "api" | "address") {
     navigator.clipboard.writeText(text);
@@ -38,6 +43,41 @@ export default function SettingsPage() {
     } else {
       setCopiedAddress(true);
       setTimeout(() => setCopiedAddress(false), 2000);
+    }
+  }
+
+  async function saveWallet() {
+    if (!walletAddress.startsWith("kaspa:") && !walletAddress.startsWith("kaspatest:")) {
+      setWalletError("Address must start with kaspa: or kaspatest:");
+      return;
+    }
+    if (walletAddress.length < 40) {
+      setWalletError("Invalid address length");
+      return;
+    }
+    setWalletError("");
+    setSavingWallet(true);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ kaspaAddress: walletAddress }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setWalletError(data.error || "Failed to save");
+        return;
+      }
+      setEditingWallet(false);
+      setWalletSaved(true);
+      setTimeout(() => setWalletSaved(false), 2000);
+    } catch {
+      setWalletError("Failed to save");
+    } finally {
+      setSavingWallet(false);
     }
   }
 
@@ -105,26 +145,81 @@ export default function SettingsPage() {
               Payments are sent directly to this address
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <Input
-                value={user.kaspaAddress}
-                readOnly
-                className="font-mono text-sm"
-              />
-              <Button
-                variant="outline"
-                onClick={() =>
-                  copyToClipboard(user.kaspaAddress, "address")
-                }
-              >
-                {copiedAddress ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                ) : (
-                  <Copy className="w-4 h-4" />
+          <CardContent className="space-y-3">
+            {editingWallet ? (
+              <>
+                <Input
+                  value={walletAddress}
+                  onChange={(e) => setWalletAddress(e.target.value)}
+                  placeholder="kaspa:... or kaspatest:..."
+                  className="font-mono text-sm"
+                  autoFocus
+                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={saveWallet}
+                    disabled={savingWallet}
+                    size="sm"
+                  >
+                    {savingWallet ? (
+                      <Loader2 className="w-3 h-3 animate-spin mr-2" />
+                    ) : (
+                      <Save className="w-3 h-3 mr-2" />
+                    )}
+                    Save
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setWalletAddress(user.kaspaAddress);
+                      setEditingWallet(false);
+                      setWalletError("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+                {walletError && (
+                  <p className="text-sm text-destructive font-bold">{walletError}</p>
                 )}
-              </Button>
-            </div>
+              </>
+            ) : (
+              <>
+                <div className="flex gap-2">
+                  <Input
+                    value={user.kaspaAddress}
+                    readOnly
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingWallet(true)}
+                    title="Edit wallet address"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      copyToClipboard(user.kaspaAddress, "address")
+                    }
+                  >
+                    {copiedAddress ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+                {walletSaved && (
+                  <div className="flex items-center gap-2 text-sm text-emerald-600 font-bold">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Wallet address updated
+                  </div>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
 

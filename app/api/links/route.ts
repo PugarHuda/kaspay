@@ -15,6 +15,8 @@ const createLinkSchema = z.object({
   expiryMinutes: z.number().int().min(5).max(1440).default(30),
   status: z.enum(["active", "draft"]).default("active"),
   linkExpiresIn: z.number().int().min(0).optional(), // minutes, 0 = never
+  customerName: z.string().max(255).optional(),
+  customerEmail: z.string().email().optional().or(z.literal("")),
 });
 
 export async function POST(req: NextRequest) {
@@ -47,6 +49,8 @@ export async function POST(req: NextRequest) {
         successMessage: data.successMessage,
         expiryMinutes: data.expiryMinutes,
         status: data.status,
+        customerName: data.customerName || null,
+        customerEmail: data.customerEmail || null,
         expiresAt,
       })
       .returning();

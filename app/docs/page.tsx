@@ -38,15 +38,35 @@ const endpoints = [
 }`,
   },
   {
+    method: "GET",
+    path: "/api/auth/me",
+    description: "Get your account details and API key",
+    auth: true,
+    body: null,
+    response: `{
+  "id": "uuid",
+  "email": "merchant@example.com",
+  "name": "My Store",
+  "kaspaAddress": "kaspa:qr...",
+  "apiKey": "your-api-key-uuid",
+  "paymentExpiry": 30
+}`,
+  },
+  {
     method: "POST",
     path: "/api/links",
-    description: "Create a new payment link",
+    description: "Create a new payment link. Supports KAS or USD currency (USD auto-converts at payment time).",
     auth: true,
     body: `{
   "title": "Premium Plan",
   "description": "Monthly subscription",
   "amount": 100,
-  "currency": "KAS"
+  "currency": "KAS",
+  "expiryMinutes": 30,
+  "status": "active",
+  "successMessage": "Thank you!",
+  "redirectUrl": "https://yoursite.com/thanks",
+  "linkExpiresIn": 10080
 }`,
     response: `{
   "id": "uuid",
@@ -54,7 +74,8 @@ const endpoints = [
   "amount": "100.00000000",
   "slug": "premium-plan-abc123",
   "url": "https://kaspay.vercel.app/pay/premium-plan-abc123",
-  "status": "active"
+  "status": "active",
+  "expiresAt": "2026-02-15T12:00:00.000Z"
 }`,
   },
   {
@@ -65,18 +86,43 @@ const endpoints = [
     body: null,
     response: `{
   "data": [
-    { "id": "uuid", "title": "...", "amount": "...", "status": "active" }
+    {
+      "id": "uuid",
+      "title": "Premium Plan",
+      "amount": "100.00000000",
+      "currency": "KAS",
+      "slug": "premium-plan-abc123",
+      "status": "active",
+      "expiresAt": null,
+      "expiryMinutes": 30,
+      "createdAt": "2026-02-08T12:00:00.000Z"
+    }
   ]
+}`,
+  },
+  {
+    method: "PATCH",
+    path: "/api/links/:id",
+    description: "Update a payment link (e.g., publish a draft or deactivate a link)",
+    auth: true,
+    body: `{
+  "status": "active"
+}`,
+    response: `{
+  "id": "uuid",
+  "status": "active"
 }`,
   },
   {
     method: "POST",
     path: "/api/payments",
-    description: "Create a payment session from a link (public endpoint for customers)",
+    description: "Create a payment session from a link. Public endpoint for customers.",
     auth: false,
     body: `{
   "paymentLinkSlug": "premium-plan-abc123",
-  "customerEmail": "customer@example.com"
+  "customerEmail": "customer@example.com",
+  "customerName": "John Doe",
+  "metadata": { "orderId": "12345" }
 }`,
     response: `{
   "id": "payment-uuid",
@@ -89,13 +135,14 @@ const endpoints = [
   {
     method: "GET",
     path: "/api/payments/:id/status",
-    description: "Poll payment status (checks Kaspa blockchain in real-time)",
+    description: "Poll payment status. Checks Kaspa blockchain for balance and UTXOs in real-time.",
     auth: false,
     body: null,
     response: `{
   "id": "payment-uuid",
   "status": "confirmed",
   "amountReceived": 100,
+  "senderAddress": "kaspatest:qr...",
   "txId": "kaspa-transaction-hash",
   "confirmations": 1,
   "confirmedAt": "2026-02-08T12:01:00.000Z"
@@ -104,7 +151,7 @@ const endpoints = [
   {
     method: "GET",
     path: "/api/payments",
-    description: "List all payments for your account",
+    description: "List all payments for your account with status and transaction details",
     auth: true,
     body: null,
     response: `{
@@ -112,10 +159,14 @@ const endpoints = [
     {
       "id": "uuid",
       "amountExpected": "100.00000000",
+      "amountReceived": "100.00000000",
       "status": "confirmed",
-      "txId": "...",
-      "customerEmail": "...",
-      "createdAt": "..."
+      "txId": "kaspa-tx-hash...",
+      "senderAddress": "kaspatest:qr...",
+      "customerName": "John Doe",
+      "customerEmail": "customer@example.com",
+      "createdAt": "2026-02-08T12:00:00.000Z",
+      "confirmedAt": "2026-02-08T12:01:00.000Z"
     }
   ]
 }`,
@@ -132,9 +183,66 @@ const endpoints = [
     response: `{
   "id": "uuid",
   "url": "https://your-server.com/webhook",
-  "events": ["payment.confirmed"],
+  "events": ["payment.confirmed", "payment.expired"],
   "secret": "webhook-signing-secret",
   "isActive": true
+}`,
+  },
+  {
+    method: "GET",
+    path: "/api/webhooks",
+    description: "List all your registered webhooks",
+    auth: true,
+    body: null,
+    response: `{
+  "data": [
+    {
+      "id": "uuid",
+      "url": "https://your-server.com/webhook",
+      "events": ["payment.confirmed"],
+      "isActive": true,
+      "createdAt": "2026-02-08T12:00:00.000Z"
+    }
+  ]
+}`,
+  },
+  {
+    method: "PATCH",
+    path: "/api/settings",
+    description: "Update your account settings (payment timeout, wallet address)",
+    auth: true,
+    body: `{
+  "paymentExpiry": 60,
+  "kaspaAddress": "kaspatest:qr..."
+}`,
+    response: `{
+  "paymentExpiry": 60,
+  "kaspaAddress": "kaspatest:qr..."
+}`,
+  },
+  {
+    method: "GET",
+    path: "/api/price",
+    description: "Get live KAS/USD price from CoinGecko (60-second cache)",
+    auth: false,
+    body: null,
+    response: `{
+  "price": 0.10,
+  "currency": "USD"
+}`,
+  },
+  {
+    method: "GET",
+    path: "/api/network",
+    description: "Get live Kaspa network statistics",
+    auth: false,
+    body: null,
+    response: `{
+  "blockCount": 12345678,
+  "headerCount": 12345678,
+  "difficulty": 1234567890123,
+  "virtualDaaScore": 87654321,
+  "networkName": "testnet-10"
 }`,
   },
 ];
@@ -269,8 +377,58 @@ export default function DocsPage() {
           ))}
         </div>
 
-        {/* Webhook Section */}
+        {/* Error Responses */}
         <div className="mt-12 mb-12">
+          <h2 className="text-2xl font-black mb-4">Error Responses</h2>
+          <p className="text-muted-foreground mb-4 font-medium">
+            All endpoints return errors in a consistent format with appropriate HTTP status codes.
+          </p>
+          <pre className="bg-muted border-2 border-foreground p-4 rounded-md text-xs font-mono overflow-x-auto shadow-brutal-sm mb-4">
+{`// 400 Bad Request - Invalid input
+{ "error": "Invalid email format" }
+
+// 401 Unauthorized - Missing or invalid token
+{ "error": "Unauthorized" }
+
+// 404 Not Found - Resource doesn't exist
+{ "error": "Payment link not found" }
+
+// 409 Conflict - Duplicate resource
+{ "error": "Email already registered" }`}
+          </pre>
+        </div>
+
+        {/* Webhook Events */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-black mb-4">Webhook Events</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full border-2 border-foreground rounded-md overflow-hidden">
+              <thead>
+                <tr className="bg-muted border-b-2 border-foreground">
+                  <th className="px-4 py-3 text-left text-sm font-black">Event</th>
+                  <th className="px-4 py-3 text-left text-sm font-black">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-foreground/20">
+                  <td className="px-4 py-3"><code className="text-sm font-mono font-bold text-primary">payment.confirmed</code></td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground font-medium">Fired when a payment is verified on the Kaspa blockchain</td>
+                </tr>
+                <tr className="border-b border-foreground/20">
+                  <td className="px-4 py-3"><code className="text-sm font-mono font-bold text-primary">payment.expired</code></td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground font-medium">Fired when a payment session times out without receiving funds</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3"><code className="text-sm font-mono font-bold text-primary">*</code></td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground font-medium">Subscribe to all events</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Webhook Section */}
+        <div className="mb-12">
           <h2 className="text-2xl font-black mb-4">Webhook Signatures</h2>
           <p className="text-muted-foreground mb-4 font-medium">
             Each webhook delivery includes an <code className="bg-muted border-2 border-foreground px-1.5 py-0.5 rounded-md text-sm font-bold">X-KasPay-Signature</code> header

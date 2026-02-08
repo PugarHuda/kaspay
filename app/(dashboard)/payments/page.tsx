@@ -5,13 +5,14 @@ import { useAuth } from "@/lib/auth/context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Download, Search } from "lucide-react";
+import { Loader2, Download, Search, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatKAS, formatDate, truncateAddress } from "@/lib/utils";
 
 interface Payment {
   id: string;
   kaspaAddress: string;
+  senderAddress: string | null;
   amountExpected: string;
   amountReceived: string | null;
   txId: string | null;
@@ -68,7 +69,10 @@ export default function PaymentsPage() {
       "Amount Expected",
       "Amount Received",
       "Status",
-      "Customer",
+      "Customer Name",
+      "Customer Email",
+      "Sender Address",
+      "Receiver Address",
       "TX ID",
       "Date",
     ];
@@ -78,7 +82,10 @@ export default function PaymentsPage() {
       p.amountExpected,
       p.amountReceived || "",
       p.status,
+      p.customerName || "",
       p.customerEmail || "",
+      p.senderAddress || "",
+      p.kaspaAddress,
       p.txId || "",
       p.createdAt,
     ]);
@@ -177,6 +184,9 @@ export default function PaymentsPage() {
                       Customer
                     </th>
                     <th className="p-4 text-sm font-black text-muted-foreground">
+                      Addresses
+                    </th>
+                    <th className="p-4 text-sm font-black text-muted-foreground">
                       TX ID
                     </th>
                     <th className="p-4 text-sm font-black text-muted-foreground">
@@ -221,12 +231,40 @@ export default function PaymentsPage() {
                           {payment.status}
                         </Badge>
                       </td>
-                      <td className="p-4 text-sm font-medium">
-                        {payment.customerEmail || (
-                          <span className="text-muted-foreground">
+                      <td className="p-4 text-sm">
+                        {payment.customerName || payment.customerEmail ? (
+                          <div>
+                            {payment.customerName && (
+                              <div className="font-bold">{payment.customerName}</div>
+                            )}
+                            {payment.customerEmail && (
+                              <div className="text-muted-foreground font-medium text-xs">{payment.customerEmail}</div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground font-medium">
                             Anonymous
                           </span>
                         )}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-1 text-xs font-mono">
+                          {payment.senderAddress ? (
+                            <>
+                              <span className="text-muted-foreground font-medium" title={payment.senderAddress}>
+                                {truncateAddress(payment.senderAddress, 6)}
+                              </span>
+                              <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                              <span className="font-medium" title={payment.kaspaAddress}>
+                                {truncateAddress(payment.kaspaAddress, 6)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground font-medium" title={payment.kaspaAddress}>
+                              To: {truncateAddress(payment.kaspaAddress, 6)}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4">
                         {payment.txId ? (
