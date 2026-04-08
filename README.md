@@ -332,6 +332,15 @@ The full git commit history is available to verify the development timeline and 
 | AI Usage Disclosure | See above |
 | Open Source | MIT License |
 
+## Prize Claim Verification
+
+For Kaspa Hackathon prize distribution, this is the official wallet address associated with this project:
+
+Kaspa Wallet Address:
+kaspa:qqvewdqutqnqud9qlhz38qacv2r9rwcag2c3v8qlpkg7rad34av4g6jmqpw0y
+
+This address is also shared via official communication channels (Discord & DoraHacks) for verification purposes.
+
 ## License
 
 MIT
